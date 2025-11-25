@@ -10,7 +10,11 @@ import {
   OPENAI_COMPLETION_MODELS,
 } from './util';
 
-import type { CallApiContextParams, CallApiOptionsParams, ProviderResponse } from '../../types';
+import type {
+  CallApiContextParams,
+  CallApiOptionsParams,
+  ProviderResponse,
+} from '../../types/index';
 import type { EnvOverrides } from '../../types/env';
 import type { OpenAiCompletionOptions } from './types';
 
@@ -71,9 +75,10 @@ export class OpenAiCompletionProvider extends OpenAiGenericProvider {
     };
 
     let data,
-      cached = false;
+      cached = false,
+      latencyMs: number | undefined;
     try {
-      ({ data, cached } = (await fetchWithCache(
+      ({ data, cached, latencyMs } = (await fetchWithCache(
         `${this.getApiUrl()}/completions`,
         {
           method: 'POST',
@@ -88,6 +93,7 @@ export class OpenAiCompletionProvider extends OpenAiGenericProvider {
         REQUEST_TIMEOUT_MS,
         'json',
         context?.bustCache ?? context?.debug,
+        this.config.maxRetries,
       )) as unknown as any);
     } catch (err) {
       logger.error(`API call error: ${String(err)}`);
@@ -106,6 +112,7 @@ export class OpenAiCompletionProvider extends OpenAiGenericProvider {
         output: data.choices[0].text,
         tokenUsage: getTokenUsage(data, cached),
         cached,
+        latencyMs,
         cost: calculateOpenAICost(
           this.modelName,
           this.config,

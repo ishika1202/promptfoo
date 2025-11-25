@@ -5,7 +5,7 @@ import cliState from '../../cliState';
 import { getEnvString } from '../../envars';
 import { importModule } from '../../esm';
 import logger from '../../logger';
-import { renderVarsInObject } from '../../util';
+import { maybeLoadToolsFromExternalFile, renderVarsInObject } from '../../util/index';
 import { maybeLoadFromExternalFile } from '../../util/file';
 import { isJavascriptFile } from '../../util/fileExtensions';
 import { isValidJson } from '../../util/json';
@@ -19,8 +19,8 @@ import {
   getCandidate,
   getGoogleClient,
   loadCredentials,
-  loadFile,
   mergeParts,
+  normalizeTools,
   resolveProjectId,
 } from './util';
 
@@ -31,7 +31,7 @@ import type {
   ProviderEmbeddingResponse,
   ProviderResponse,
   TokenUsage,
-} from '../../types';
+} from '../../types/index';
 import type { EnvOverrides } from '../../types/env';
 import type { ClaudeRequest, ClaudeResponse, CompletionOptions } from './types';
 import type {
@@ -130,7 +130,7 @@ class VertexGenericProvider implements ApiProvider {
   }
 
   // @ts-ignore: Prompt is not used in this implementation
-  async callApi(prompt: string): Promise<ProviderResponse> {
+  async callApi(_prompt: string): Promise<ProviderResponse> {
     throw new Error('Not implemented');
   }
 }
@@ -166,7 +166,7 @@ export class VertexChatProvider extends VertexGenericProvider {
     return this.callPalm2Api(prompt);
   }
 
-  async callClaudeApi(prompt: string, context?: CallApiContextParams): Promise<ProviderResponse> {
+  async callClaudeApi(prompt: string, _context?: CallApiContextParams): Promise<ProviderResponse> {
     const messages = parseChatPrompt(prompt, [
       {
         role: 'user',
@@ -300,7 +300,13 @@ export class VertexChatProvider extends VertexGenericProvider {
     );
     // --- MCP tool injection logic ---
     const mcpTools = this.mcpClient ? transformMCPToolsToGoogle(this.mcpClient.getAllTools()) : [];
-    const allTools = [...mcpTools, ...(config.tools ? loadFile(config.tools, context?.vars) : [])];
+    const fileTools = config.tools
+      ? await maybeLoadToolsFromExternalFile(config.tools, context?.vars)
+      : [];
+    const allTools = [
+      ...mcpTools,
+      ...(Array.isArray(fileTools) ? normalizeTools(fileTools) : fileTools ? [fileTools] : []),
+    ];
     // --- End MCP tool injection logic ---
     // https://ai.google.dev/api/rest/v1/models/streamGenerateContent
     const body = {
@@ -657,7 +663,7 @@ export class VertexChatProvider extends VertexGenericProvider {
     }
   }
 
-  async callLlamaApi(prompt: string, context?: CallApiContextParams): Promise<ProviderResponse> {
+  async callLlamaApi(prompt: string, _context?: CallApiContextParams): Promise<ProviderResponse> {
     // Validate region for Llama models (only available in us-central1)
     const region = this.getRegion();
     if (region !== 'us-central1') {

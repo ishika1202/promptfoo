@@ -3,12 +3,11 @@ import dedent from 'dedent';
 import { z } from 'zod';
 import cliState from '../../cliState';
 import { CLOUD_PROVIDER_PREFIX } from '../../constants';
-import { DEFAULT_MAX_CONCURRENCY } from '../../evaluator';
+import { DEFAULT_MAX_CONCURRENCY } from '../../constants';
 import logger from '../../logger';
 import telemetry from '../../telemetry';
-import { setupEnv } from '../../util';
+import { setupEnv } from '../../util/index';
 import { getConfigFromCloud } from '../../util/cloud';
-import { checkProbeLimit } from '../../util/redteamProbeLimit';
 import { doRedteamRun } from '../shared';
 import { poisonCommand } from './poison';
 import type { Command } from 'commander';
@@ -59,6 +58,7 @@ export function redteamRunCommand(program: Command) {
       telemetry.record('command_used', {
         name: 'redteam run',
       });
+      telemetry.record('redteam run', {});
 
       if (opts.config && UUID_REGEX.test(opts.config)) {
         if (opts.target && !UUID_REGEX.test(opts.target)) {
@@ -87,14 +87,6 @@ export function redteamRunCommand(program: Command) {
       }
 
       try {
-        // Check monthly probe limit before running redteam
-        const probeCheckResult = await checkProbeLimit();
-
-        if (!probeCheckResult.canProceed) {
-          process.exitCode = probeCheckResult.exitCode;
-          return;
-        }
-
         if (opts.remote) {
           cliState.remote = true;
         }

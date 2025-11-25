@@ -8,7 +8,7 @@ import { checkModelAuditInstalled } from '../../commands/modelScan';
 import logger from '../../logger';
 import ModelAudit from '../../models/modelAudit';
 import telemetry from '../../telemetry';
-import { parseModelAuditArgs } from '../../utils/modelAuditCliParser';
+import { parseModelAuditArgs } from '../../util/modelAuditCliParser';
 import type { Request, Response } from 'express';
 
 import type { ModelAuditScanResults } from '../../types/modelAudit';
@@ -16,7 +16,7 @@ import type { ModelAuditScanResults } from '../../types/modelAudit';
 export const modelAuditRouter = Router();
 
 // Check if modelaudit is installed
-modelAuditRouter.get('/check-installed', async (req: Request, res: Response): Promise<void> => {
+modelAuditRouter.get('/check-installed', async (_req: Request, res: Response): Promise<void> => {
   try {
     // First try to check if the modelaudit CLI is available
     const installed = await checkModelAuditInstalled();

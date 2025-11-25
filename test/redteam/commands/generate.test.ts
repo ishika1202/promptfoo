@@ -5,22 +5,19 @@ import * as yaml from 'js-yaml';
 import { getAuthor, getUserEmail } from '../../../src/globalConfig/accounts';
 import { cloudConfig } from '../../../src/globalConfig/cloud';
 import logger from '../../../src/logger';
-import { synthesize } from '../../../src/redteam';
+import { synthesize } from '../../../src/redteam/index';
 import { doTargetPurposeDiscovery } from '../../../src/redteam/commands/discover';
 import { doGenerateRedteam, redteamGenerateCommand } from '../../../src/redteam/commands/generate';
 import { Severity } from '../../../src/redteam/constants';
 import { extractMcpToolsInfo } from '../../../src/redteam/extraction/mcpTools';
-import {
-  ConfigPermissionError,
-  checkCloudPermissions,
-  getConfigFromCloud,
-} from '../../../src/util/cloud';
+import { getConfigFromCloud } from '../../../src/util/cloud';
+import { checkCloudPermissions, ConfigPermissionError } from '../../../src/util/cloud';
 import * as configModule from '../../../src/util/config/load';
 import { readConfig } from '../../../src/util/config/load';
 import { writePromptfooConfig } from '../../../src/util/config/writer';
 
 import type { RedteamCliGenerateOptions, RedteamPluginObject } from '../../../src/redteam/types';
-import type { ApiProvider } from '../../../src/types';
+import type { ApiProvider } from '../../../src/types/index';
 
 jest.mock('fs');
 jest.mock('../../../src/redteam');
@@ -34,8 +31,13 @@ jest.mock('uuid', () => ({
 }));
 jest.mock('../../../src/util', () => ({
   setupEnv: jest.fn(),
-  isRunningUnderNpx: jest.fn().mockReturnValue(false),
   printBorder: jest.fn(),
+}));
+
+jest.mock('../../../src/util/promptfooCommand', () => ({
+  promptfooCommand: jest.fn().mockReturnValue('promptfoo redteam init'),
+  detectInstaller: jest.fn().mockReturnValue('unknown'),
+  isRunningUnderNpx: jest.fn().mockReturnValue(false),
 }));
 jest.mock('../../../src/util/config/load', () => ({
   combineConfigs: jest.fn(),
@@ -96,29 +98,7 @@ jest.mock('../../../src/redteam/remoteGeneration', () => ({
   getRemoteGenerationUrl: jest.fn().mockReturnValue('http://test-url'),
 }));
 
-jest.mock('../../../src/util/config/manage', () => ({
-  ...jest.requireActual('../../../src/util/config/manage'),
-  getConfigDirectoryPath: jest.fn().mockReturnValue('/mock/config/path'),
-  writePromptfooConfig: jest.fn(),
-}));
-
-jest.mock('../../../src/util/redteamProbeLimit', () => ({
-  getMonthlyRedteamProbeUsage: jest.fn().mockResolvedValue(0),
-  incrementRedteamProbeUsage: jest.fn(),
-  checkMonthlyProbeLimit: jest.fn().mockResolvedValue({ allowed: true, usage: 0, limit: 1000 }),
-  formatProbeUsageMessage: jest.fn(),
-  checkProbeLimit: jest.fn().mockResolvedValue({
-    canProceed: true,
-    probeStatus: {
-      hasExceeded: false,
-      usedProbes: 0,
-      remainingProbes: 1000,
-      limit: 1000,
-      enabled: true,
-    },
-  }),
-}));
-
+jest.mock('../../../src/util/config/manage');
 jest.mock('../../../src/globalConfig/accounts', () => ({
   getAuthor: jest.fn(),
   getUserEmail: jest.fn(),
@@ -201,7 +181,6 @@ describe('doGenerateRedteam', () => {
 
     expect(synthesize).toHaveBeenCalledWith(
       expect.objectContaining({
-        language: undefined,
         numTests: undefined,
         plugins: expect.any(Array),
         prompts: [],
@@ -326,7 +305,6 @@ describe('doGenerateRedteam', () => {
 
     expect(synthesize).toHaveBeenCalledWith(
       expect.objectContaining({
-        language: undefined,
         numTests: undefined,
         purpose: 'Test purpose',
         plugins: expect.any(Array),
@@ -394,7 +372,6 @@ describe('doGenerateRedteam', () => {
 
     expect(synthesize).toHaveBeenCalledWith(
       expect.objectContaining({
-        language: undefined,
         numTests: 1,
         plugins: expect.arrayContaining([
           expect.objectContaining({ id: 'competitors', numTests: 1 }),
@@ -463,7 +440,6 @@ describe('doGenerateRedteam', () => {
 
     expect(synthesize).toHaveBeenCalledWith(
       expect.objectContaining({
-        language: undefined,
         numTests: 5,
         plugins: expect.arrayContaining([
           expect.objectContaining({ id: 'contracts', numTests: 5 }),
@@ -594,7 +570,6 @@ describe('doGenerateRedteam', () => {
         strategies: [],
         abortSignal: undefined,
         delay: undefined,
-        language: undefined,
         maxConcurrency: undefined,
         numTests: undefined,
       }),

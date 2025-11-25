@@ -6,7 +6,13 @@ interface ReactElementWithChildren extends React.ReactElement {
 }
 
 function isReactElementWithChildren(node: React.ReactNode): node is ReactElementWithChildren {
-  return React.isValidElement(node) && 'children' in node.props;
+  if (!React.isValidElement(node)) {
+    return false;
+  }
+  if (!node.props || typeof node.props !== 'object') {
+    return false;
+  }
+  return 'children' in node.props;
 }
 
 // Helper function to check if a string contains a markdown image with base64 data
@@ -63,6 +69,7 @@ function TruncatedText({ text: rawText, maxLength }: TruncatedTextProps) {
       ? rawText
       : JSON.stringify(rawText);
 
+<<<<<<< HEAD
   const contentLen = textLength(text);
 
   // Check if the content contains a markdown base64 image
@@ -70,21 +77,34 @@ function TruncatedText({ text: rawText, maxLength }: TruncatedTextProps) {
   const containsBase64Image = containsMarkdownBase64Image(extractTextContent(text));
 
   const isOverLength = maxLength > 0 && contentLen > maxLength;
+=======
+  const contentLen = React.useMemo(() => textLength(text), [text]);
+  const isOverLength = React.useMemo(
+    () => maxLength > 0 && contentLen > maxLength,
+    [contentLen, maxLength],
+  );
+>>>>>>> origin/main
 
   // Initialize truncation state based on whether text actually exceeds maxLength
   // But don't truncate if it contains a base64 image
   const [isTruncated, setIsTruncated] = React.useState(() => isOverLength && !containsBase64Image);
 
-  // Only reset when textual content length changes (not when maxLength changes)
-  const prevContentLenRef = React.useRef(contentLen);
+  // Reset truncation state when content or length threshold changes
   React.useEffect(() => {
+<<<<<<< HEAD
     if (prevContentLenRef.current !== contentLen) {
       setIsTruncated(maxLength > 0 && contentLen > maxLength && !containsBase64Image);
       prevContentLenRef.current = contentLen;
     }
   }, [contentLen, maxLength, containsBase64Image]);
+=======
+    setIsTruncated(isOverLength);
+  }, [isOverLength]);
+>>>>>>> origin/main
 
-  const toggleTruncate = () => {
+  const toggleTruncate = (e: React.MouseEvent<HTMLSpanElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
     setIsTruncated((v) => !v);
   };
 
@@ -127,20 +147,26 @@ function TruncatedText({ text: rawText, maxLength }: TruncatedTextProps) {
   };
 
   const truncatedText = isTruncated ? truncateText(text) : text;
+
   return (
     <div style={{ position: 'relative' }}>
       <div
         // TODO: Element IDs should be unique; these aren't.
         id="eval-output-cell-text"
         style={{
-          cursor: isOverLength ? 'pointer' : 'normal',
           position: 'relative',
           marginBottom: '8px',
         }}
-        onClick={isOverLength ? toggleTruncate : undefined}
+        // Force re-render when isOverLength changes by adding a data attribute
+        data-over-length={isOverLength}
       >
         {truncatedText}
+<<<<<<< HEAD
         {isTruncated && isOverLength && !containsBase64Image && (
+=======
+
+        {isOverLength && (
+>>>>>>> origin/main
           <span
             style={{
               display: 'inline-flex',
@@ -149,13 +175,19 @@ function TruncatedText({ text: rawText, maxLength }: TruncatedTextProps) {
               color: '#3b82f6',
               fontWeight: 'bold',
               fontSize: '0.85em',
-              padding: '0 4px',
+              padding: '1px 4px',
               borderRadius: '4px',
               background: 'rgba(59, 130, 246, 0.1)',
-              letterSpacing: '0.1rem',
+              cursor: 'pointer',
             }}
+            onClick={toggleTruncate}
+            className="truncation-toggler"
           >
-            <span>...</span>
+            {isTruncated ? (
+              <span style={{ letterSpacing: '0.1rem' }}>...</span>
+            ) : (
+              <span>Show less</span>
+            )}
             <svg
               width="12"
               height="12"
@@ -167,6 +199,7 @@ function TruncatedText({ text: rawText, maxLength }: TruncatedTextProps) {
               strokeLinejoin="round"
               style={{ marginLeft: '4px' }}
             >
+<<<<<<< HEAD
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
           </span>
@@ -202,6 +235,13 @@ function TruncatedText({ text: rawText, maxLength }: TruncatedTextProps) {
               style={{ marginLeft: '4px' }}
             >
               <polyline points="18 15 12 9 6 15"></polyline>
+=======
+              {isTruncated ? (
+                <polyline points="6 9 12 15 18 9"></polyline>
+              ) : (
+                <polyline points="18 15 12 9 6 15"></polyline>
+              )}
+>>>>>>> origin/main
             </svg>
           </span>
         )}

@@ -179,6 +179,7 @@ export interface CompletionOptions {
     // Thinking configuration
     thinkingConfig?: {
       thinkingBudget?: number;
+      thinkingLevel?: 'LOW' | 'MEDIUM' | 'HIGH';
     };
   };
 

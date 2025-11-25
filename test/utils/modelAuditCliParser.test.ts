@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import {
   parseModelAuditArgs,
   validateModelAuditArgs,
@@ -9,7 +10,7 @@ import {
   VALID_MODELAUDIT_OPTIONS,
   DEPRECATED_OPTIONS_MAP,
   type ModelAuditCliOptions,
-} from '../../src/utils/modelAuditCliParser';
+} from '../../src/util/modelAuditCliParser';
 
 describe('ModelAudit CLI Parser', () => {
   describe('parseModelAuditArgs', () => {
@@ -205,14 +206,13 @@ describe('ModelAudit CLI Parser', () => {
     });
 
     it('should return null for options with no replacement', () => {
-      const deprecated = ['--registry-uri', '--cache-dir', '--stream'];
+      const deprecated = ['--registry-uri', '--cache-dir'];
 
       const suggestions = suggestReplacements(deprecated);
 
       expect(suggestions).toEqual({
         '--registry-uri': null,
         '--cache-dir': null,
-        '--stream': null,
       });
     });
 
@@ -299,6 +299,7 @@ describe('ModelAudit CLI Parser', () => {
         '--max-size',
         '--dry-run',
         '--no-cache',
+        '--stream',
       ];
 
       expectedOptions.forEach((option) => {

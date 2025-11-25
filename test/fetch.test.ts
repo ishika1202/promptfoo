@@ -3,16 +3,9 @@ import path from 'path';
 
 import { ProxyAgent, setGlobalDispatcher } from 'undici';
 import cliState from '../src/cliState';
-import {
-  CONSENT_ENDPOINT,
-  EVENTS_ENDPOINT,
-  KA_ENDPOINT,
-  R_ENDPOINT,
-  VERSION,
-} from '../src/constants';
+import { VERSION } from '../src/constants';
 import { getEnvBool, getEnvString } from '../src/envars';
-import { CLOUD_API_HOST, cloudConfig } from '../src/globalConfig/cloud';
-import logger, { logRequestResponse } from '../src/logger';
+import logger from '../src/logger';
 import { REQUEST_TIMEOUT_MS } from '../src/providers/shared';
 import {
   fetchWithProxy,
@@ -20,7 +13,7 @@ import {
   fetchWithTimeout,
   handleRateLimit,
   isRateLimited,
-} from '../src/util/fetch';
+} from '../src/util/fetch/index';
 import { sleep } from '../src/util/time';
 import { createMockResponse } from './util/utils';
 
@@ -932,6 +925,31 @@ describe('fetchWithRetries', () => {
     expect(mockFetch).toHaveBeenCalledTimes(2);
     expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('Rate limited on URL'));
     expect(sleep).toHaveBeenCalledTimes(1);
+  });
+
+  it('should log attempt count with total attempts on rate limit', async () => {
+    const rateLimitedResponse = createMockResponse({
+      status: 429,
+      headers: new Headers({ 'Retry-After': '0' }),
+    });
+    jest.mocked(global.fetch).mockResolvedValue(rateLimitedResponse);
+
+    await expect(fetchWithRetries('https://example.com', {}, 1000, 2)).rejects.toThrow();
+
+    expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('attempt 1/3'));
+  });
+
+  it('should include error details in final error message for rate limits', async () => {
+    const rateLimitResponse = createMockResponse({
+      status: 429,
+      statusText: 'Too Many Requests',
+    });
+
+    jest.mocked(global.fetch).mockResolvedValue(rateLimitResponse);
+
+    await expect(fetchWithRetries('https://example.com', {}, 1000, 2)).rejects.toThrow(
+      'Rate limited: 429 Too Many Requests',
+    );
   });
 });
 

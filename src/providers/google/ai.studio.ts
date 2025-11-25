@@ -1,7 +1,7 @@
 import { fetchWithCache } from '../../cache';
 import { getEnvString } from '../../envars';
 import logger from '../../logger';
-import { renderVarsInObject } from '../../util';
+import { maybeLoadToolsFromExternalFile, renderVarsInObject } from '../../util/index';
 import { maybeLoadFromExternalFile } from '../../util/file';
 import { getNunjucksEngine } from '../../util/templates';
 import { MCPClient } from '../mcp/client';
@@ -13,7 +13,7 @@ import {
   formatCandidateContents,
   geminiFormatAndSystemInstructions,
   getCandidate,
-  loadFile,
+  normalizeTools,
 } from './util';
 
 import type {
@@ -21,7 +21,7 @@ import type {
   CallApiContextParams,
   GuardrailResponse,
   ProviderResponse,
-} from '../../types';
+} from '../../types/index';
 import type { EnvOverrides } from '../../types/env';
 import type { CompletionOptions } from './types';
 import type { GeminiResponseData } from './util';
@@ -107,7 +107,7 @@ class AIStudioGenericProvider implements ApiProvider {
   }
 
   // @ts-ignore: Prompt is not used in this implementation
-  async callApi(prompt: string): Promise<ProviderResponse> {
+  async callApi(_prompt: string): Promise<ProviderResponse> {
     throw new Error('Not implemented');
   }
 }
@@ -266,11 +266,20 @@ export class AIStudioChatProvider extends AIStudioGenericProvider {
     );
 
     // Determine API version based on model
-    const apiVersion = this.modelName === 'gemini-2.0-flash-thinking-exp' ? 'v1alpha' : 'v1beta';
+    const apiVersion =
+      this.modelName === 'gemini-2.0-flash-thinking-exp' || this.modelName.startsWith('gemini-3-')
+        ? 'v1alpha'
+        : 'v1beta';
 
     // --- MCP tool injection logic ---
     const mcpTools = this.mcpClient ? transformMCPToolsToGoogle(this.mcpClient.getAllTools()) : [];
-    const allTools = [...mcpTools, ...(config.tools ? loadFile(config.tools, context?.vars) : [])];
+    const fileTools = config.tools
+      ? await maybeLoadToolsFromExternalFile(config.tools, context?.vars)
+      : [];
+    const allTools = [
+      ...mcpTools,
+      ...(Array.isArray(fileTools) ? normalizeTools(fileTools) : fileTools ? [fileTools] : []),
+    ];
     // --- End MCP tool injection logic ---
 
     const body: Record<string, any> = {
