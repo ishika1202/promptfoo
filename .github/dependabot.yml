@@ -6,13 +6,16 @@ updates:
       interval: daily
     allow:
       - dependency-name: '@anthropic-ai/sdk'
+      - dependency-name: '@anthropic-ai/claude-agent-sdk'
       - dependency-name: '@aws-sdk/client-bedrock-runtime'
+      - dependency-name: '@aws-sdk/client-bedrock-agent-runtime'
       - dependency-name: '@azure/identity'
       - dependency-name: '@azure/openai-assistants'
-      - dependency-name: 'cloudflare'
-      - dependency-name: 'groq-sdk'
+      - dependency-name: '@fal-ai/client'
+      - dependency-name: '@ibm-cloud/watsonx-ai'
+      - dependency-name: '@modelcontextprotocol/sdk'
+      - dependency-name: '@openai/agents'
       - dependency-name: 'openai'
-      - dependency-name: 'replicate'
   - package-ecosystem: github-actions
     directory: /
     schedule:
