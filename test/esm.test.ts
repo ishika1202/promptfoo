@@ -1,21 +1,22 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import path from 'path';
 
 import { importModule } from '../src/esm';
 import logger from '../src/logger';
 
-jest.mock('../src/logger', () => ({
+vi.mock('../src/logger', () => ({
   __esModule: true,
   default: {
-    debug: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
-    info: jest.fn(),
+    debug: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    info: vi.fn(),
   },
 }));
 
 describe('ESM utilities', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('importModule', () => {

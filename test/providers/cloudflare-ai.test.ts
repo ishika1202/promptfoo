@@ -12,7 +12,9 @@ import { loadApiProviders } from '../../src/providers/index';
 import type { ProviderOptionsMap } from '../../src/types/index';
 
 vi.mock('proxy-agent', () => ({
-  ProxyAgent: vi.fn().mockImplementation(() => ({})),
+  ProxyAgent: vi.fn().mockImplementation(function() {
+    return ({});
+  }),
 }));
 
 vi.mock('../../src/esm', async () => {

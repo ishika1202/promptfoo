@@ -1,0 +1,8 @@
+evaluateOptions: null
+providers:
+  - id: openai:gpt-4o-mini
+prompts:
+  - test
+tests:
+  - vars:
+      input: test

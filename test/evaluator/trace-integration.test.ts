@@ -1,3 +1,4 @@
+import { Mock, beforeEach, describe, expect, it, vi } from "vitest";
 import { evaluate } from '../../src/evaluator';
 import { getTraceStore } from '../../src/tracing/store';
 
@@ -5,36 +6,36 @@ import type Eval from '../../src/models/eval';
 import type { EvaluateOptions, TestSuite } from '../../src/types/index';
 
 // Mock dependencies
-jest.mock('../../src/tracing/store');
-jest.mock('../../src/tracing/otlpReceiver', () => ({
-  startOTLPReceiver: jest.fn(),
-  stopOTLPReceiver: jest.fn(),
+vi.mock('../../src/tracing/store');
+vi.mock('../../src/tracing/otlpReceiver', () => ({
+  startOTLPReceiver: vi.fn(),
+  stopOTLPReceiver: vi.fn(),
 }));
 
 // Mock evaluatorTracing module
-jest.mock('../../src/tracing/evaluatorTracing', () => ({
-  generateTraceId: jest.fn(() => 'abcdef1234567890abcdef1234567890'),
-  generateSpanId: jest.fn(() => '0123456789abcdef'),
-  generateTraceparent: jest.fn((traceId, spanId) => `00-${traceId}-${spanId}-01`),
-  generateTraceContextIfNeeded: jest.fn(),
-  startOtlpReceiverIfNeeded: jest.fn(),
-  stopOtlpReceiverIfNeeded: jest.fn(),
-  isOtlpReceiverStarted: jest.fn(() => false),
-  isTracingEnabled: jest.fn((test) => test.metadata?.tracingEnabled === true),
+vi.mock('../../src/tracing/evaluatorTracing', () => ({
+  generateTraceId: vi.fn(() => 'abcdef1234567890abcdef1234567890'),
+  generateSpanId: vi.fn(() => '0123456789abcdef'),
+  generateTraceparent: vi.fn((traceId, spanId) => `00-${traceId}-${spanId}-01`),
+  generateTraceContextIfNeeded: vi.fn(),
+  startOtlpReceiverIfNeeded: vi.fn(),
+  stopOtlpReceiverIfNeeded: vi.fn(),
+  isOtlpReceiverStarted: vi.fn(() => false),
+  isTracingEnabled: vi.fn((test) => test.metadata?.tracingEnabled === true),
 }));
 
 describe('evaluator trace integration', () => {
   const mockTraceStore = {
-    createTrace: jest.fn(),
-    getTrace: jest.fn(),
+    createTrace: vi.fn(),
+    getTrace: vi.fn(),
   };
 
   const mockEval = {
     id: 'test-eval-id',
-    addResult: jest.fn(),
-    addPrompts: jest.fn(),
-    fetchResultsByTestIdx: jest.fn(),
-    setVars: jest.fn(),
+    addResult: vi.fn(),
+    addPrompts: vi.fn(),
+    fetchResultsByTestIdx: vi.fn(),
+    setVars: vi.fn(),
     results: [],
     prompts: [],
     persisted: false,
@@ -44,8 +45,8 @@ describe('evaluator trace integration', () => {
   } as unknown as Eval;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (getTraceStore as jest.Mock).mockReturnValue(mockTraceStore);
+    vi.clearAllMocks();
+    (getTraceStore as Mock).mockReturnValue(mockTraceStore);
   });
 
   it('should pass traceId through to assertions when tracing is enabled', async () => {
@@ -76,7 +77,7 @@ describe('evaluator trace integration', () => {
       providers: [
         {
           id: () => 'mock-provider',
-          callApi: jest.fn().mockResolvedValue({
+          callApi: vi.fn().mockResolvedValue({
             output: 'Test response',
             tokenUsage: {},
           }),
@@ -147,7 +148,7 @@ describe('evaluator trace integration', () => {
       providers: [
         {
           id: () => 'mock-provider',
-          callApi: jest.fn().mockResolvedValue({
+          callApi: vi.fn().mockResolvedValue({
             output: 'Test response',
             tokenUsage: {},
           }),
@@ -221,7 +222,7 @@ describe('evaluator trace integration', () => {
       providers: [
         {
           id: () => 'mock-provider',
-          callApi: jest.fn().mockResolvedValue({
+          callApi: vi.fn().mockResolvedValue({
             output: 'Test response',
             tokenUsage: {},
           }),

@@ -1,3 +1,4 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import fs from 'fs/promises';
 
 import { Command } from 'commander';
@@ -7,12 +8,12 @@ import logger from '../../src/logger';
 import { fetchWithProxy } from '../../src/util/fetch/index';
 import { createMockResponse } from '../util/utils';
 
-jest.mock('../../src/redteam/commands/init', () => ({
-  redteamInit: jest.fn(),
+vi.mock('../../src/redteam/commands/init', () => ({
+  redteamInit: vi.fn(),
 }));
 
-jest.mock('../../src/server/server', () => ({
-  startServer: jest.fn(),
+vi.mock('../../src/server/server', () => ({
+  startServer: vi.fn(),
   BrowserBehavior: {
     ASK: 0,
     OPEN: 1,
@@ -22,32 +23,32 @@ jest.mock('../../src/server/server', () => ({
   },
 }));
 
-jest.mock('../../src/util/fetch/index', () => ({
-  fetchWithProxy: jest.fn(),
+vi.mock('../../src/util/fetch/index', () => ({
+  fetchWithProxy: vi.fn(),
 }));
 
-jest.mock('fs/promises');
-jest.mock('path', () => ({
-  ...jest.requireActual('path'),
-  resolve: jest.fn(),
+vi.mock('fs/promises');
+vi.mock('path', async () => ({
+  ...(await vi.importActual('path')),
+  resolve: vi.fn()
 }));
-jest.mock('../../src/constants');
-jest.mock('../../src/onboarding');
-jest.mock('../../src/telemetry');
-jest.mock('@inquirer/confirm');
-jest.mock('@inquirer/input');
-jest.mock('@inquirer/select');
+vi.mock('../../src/constants');
+vi.mock('../../src/onboarding');
+vi.mock('../../src/telemetry');
+vi.mock('@inquirer/confirm');
+vi.mock('@inquirer/input');
+vi.mock('@inquirer/select');
 
-const mockFetchWithProxy = jest.mocked(fetchWithProxy);
+const mockFetchWithProxy = vi.mocked(fetchWithProxy);
 
 describe('init command', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockFetchWithProxy.mockClear();
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('downloadFile', () => {
@@ -137,7 +138,7 @@ describe('init command', () => {
 
   describe('downloadExample', () => {
     it('should throw an error if directory creation fails', async () => {
-      jest.spyOn(fs, 'mkdir').mockRejectedValue(new Error('Permission denied'));
+      vi.spyOn(fs, 'mkdir').mockRejectedValue(new Error('Permission denied'));
 
       await expect(init.downloadExample('example', '/path/to/target')).rejects.toThrow(
         'Failed to download example: Permission denied',
@@ -145,7 +146,7 @@ describe('init command', () => {
     });
 
     it('should throw an error if downloadDirectory fails', async () => {
-      jest.spyOn(fs, 'mkdir').mockResolvedValue(undefined);
+      vi.spyOn(fs, 'mkdir').mockResolvedValue(undefined);
 
       // Mock fetch to simulate downloadDirectory failure
       mockFetchWithProxy.mockRejectedValue(new Error('Network error'));
@@ -205,9 +206,9 @@ describe('init command', () => {
         // Download failed
         mockFetchWithProxy.mockRejectedValue(new Error('404 Not Found'));
         // User selects not to download another example
-        jest.mocked(confirm).mockResolvedValue(false);
+        vi.mocked(confirm).mockResolvedValue(false);
 
-        const loggerSpy = jest.spyOn(logger, 'info');
+        const loggerSpy = vi.spyOn(logger, 'info');
 
         const result = await init.handleExampleDownload('.', 'nonexistent-example');
 
@@ -222,9 +223,9 @@ describe('init command', () => {
         // Download failed
         mockFetchWithProxy.mockRejectedValue(new Error('404 Not Found'));
         // User selects not to download another example
-        jest.mocked(confirm).mockResolvedValue(false);
+        vi.mocked(confirm).mockResolvedValue(false);
 
-        const loggerSpy = jest.spyOn(logger, 'info');
+        const loggerSpy = vi.spyOn(logger, 'info');
 
         const result = await init.handleExampleDownload('.', 'nonexistent-example');
 
@@ -237,12 +238,12 @@ describe('init command', () => {
         // Download failed
         mockFetchWithProxy.mockRejectedValue(new Error('404 Not Found'));
         // User selects not to download another example
-        jest.mocked(confirm).mockResolvedValue(false);
+        vi.mocked(confirm).mockResolvedValue(false);
 
         // Directory exists before download
-        jest.spyOn(fs, 'access').mockResolvedValue(undefined);
+        vi.spyOn(fs, 'access').mockResolvedValue(undefined);
         // Mock successful cleanup
-        const rmSpy = jest.spyOn(fs, 'rm').mockResolvedValue(undefined);
+        const rmSpy = vi.spyOn(fs, 'rm').mockResolvedValue(undefined);
 
         await init.handleExampleDownload('.', 'nonexistent-example');
 
@@ -257,12 +258,12 @@ describe('init command', () => {
         // Download failed
         mockFetchWithProxy.mockRejectedValue(new Error('404 Not Found'));
         // User selects not to download another example
-        jest.mocked(confirm).mockResolvedValue(false);
+        vi.mocked(confirm).mockResolvedValue(false);
 
         // Directory doesn't exist before download (fs.access throws)
-        jest.spyOn(fs, 'access').mockRejectedValue(new Error('ENOENT: no such file or directory'));
+        vi.spyOn(fs, 'access').mockRejectedValue(new Error('ENOENT: no such file or directory'));
         // Mock successful cleanup
-        const rmSpy = jest.spyOn(fs, 'rm').mockResolvedValue(undefined);
+        const rmSpy = vi.spyOn(fs, 'rm').mockResolvedValue(undefined);
 
         await init.handleExampleDownload('.', 'nonexistent-example');
 

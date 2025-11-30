@@ -1,45 +1,52 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AwsBedrockKnowledgeBaseProvider } from '../../../src/providers/bedrock/knowledgeBase';
 import { createEmptyTokenUsage } from '../../../src/util/tokenUsageUtils';
 
-const mockSend = jest.fn();
+const mockSend = vi.fn();
 const mockBedrockClient = {
   send: mockSend,
 };
 
-jest.mock('@aws-sdk/client-bedrock-agent-runtime', () => ({
-  BedrockAgentRuntimeClient: jest.fn().mockImplementation(() => mockBedrockClient),
-  RetrieveAndGenerateCommand: jest.fn().mockImplementation((params) => params),
+vi.mock('@aws-sdk/client-bedrock-agent-runtime', () => ({
+  BedrockAgentRuntimeClient: vi.fn().mockImplementation(function() {
+    return mockBedrockClient;
+  }),
+  RetrieveAndGenerateCommand: vi.fn().mockImplementation(function(params) {
+    return params;
+  }),
 }));
 
-const { BedrockAgentRuntimeClient, RetrieveAndGenerateCommand } = jest.requireMock(
-  '@aws-sdk/client-bedrock-agent-runtime',
-);
+const { BedrockAgentRuntimeClient, RetrieveAndGenerateCommand } = await import('@aws-sdk/client-bedrock-agent-runtime');
 
-jest.mock('@smithy/node-http-handler', () => {
+vi.mock('@smithy/node-http-handler', () => {
   return {
-    NodeHttpHandler: jest.fn().mockImplementation(() => ({
-      handle: jest.fn(),
-    })),
+    NodeHttpHandler: vi.fn().mockImplementation(function() {
+      return ({
+        handle: vi.fn()
+      });
+    }),
   };
 });
 
-jest.mock('proxy-agent', () => jest.fn());
+vi.mock('proxy-agent', () => vi.fn());
 
-const mockGet = jest.fn();
-const mockSet = jest.fn();
-const mockIsCacheEnabled = jest.fn().mockReturnValue(false);
+const mockGet = vi.fn();
+const mockSet = vi.fn();
+const mockIsCacheEnabled = vi.fn().mockReturnValue(false);
 
-jest.mock('../../../src/cache', () => ({
-  getCache: jest.fn().mockImplementation(() => ({
-    get: mockGet,
-    set: mockSet,
-  })),
+vi.mock('../../../src/cache', () => ({
+  getCache: vi.fn().mockImplementation(function() {
+    return ({
+      get: mockGet,
+      set: mockSet
+    });
+  }),
   isCacheEnabled: () => mockIsCacheEnabled(),
 }));
 
 describe('AwsBedrockKnowledgeBaseProvider', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     delete process.env.AWS_BEDROCK_MAX_RETRIES;
     delete process.env.AWS_BEARER_TOKEN_BEDROCK;
     delete process.env.HTTPS_PROXY;
@@ -53,7 +60,7 @@ describe('AwsBedrockKnowledgeBaseProvider', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     delete process.env.AWS_BEARER_TOKEN_BEDROCK;
     delete process.env.HTTPS_PROXY;
     delete process.env.https_proxy;

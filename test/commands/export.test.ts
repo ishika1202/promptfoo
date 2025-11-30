@@ -1,3 +1,15 @@
+import {
+  Mocked,
+  MockedFunction,
+  SpyInstance,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
+
 import fs from 'fs';
 
 import { Command } from 'commander';
@@ -7,13 +19,15 @@ import Eval from '../../src/models/eval';
 import { writeOutput } from '../../src/util/index';
 import { getConfigDirectoryPath } from '../../src/util/config/manage';
 
-jest.mock('../../src/telemetry', () => ({
-  record: jest.fn(),
+vi.mock('../../src/telemetry', () => ({
+  default: ({
+    record: vi.fn()
+  })
 }));
 
-jest.mock('../../src/util', () => ({
-  writeOutput: jest.fn(),
-  createOutputMetadata: jest.fn().mockReturnValue({
+vi.mock('../../src/util', () => ({
+  writeOutput: vi.fn(),
+  createOutputMetadata: vi.fn().mockReturnValue({
     promptfooVersion: '1.0.0',
     nodeVersion: 'v20.0.0',
     platform: 'linux',
@@ -24,62 +38,66 @@ jest.mock('../../src/util', () => ({
   }),
 }));
 
-jest.mock('../../src/logger', () => ({
-  info: jest.fn(),
-  error: jest.fn(),
+vi.mock('../../src/logger', () => ({
+  default: ({
+    info: vi.fn(),
+    error: vi.fn()
+  })
 }));
 
-jest.mock('../../src/util/config/manage', () => ({
-  getConfigDirectoryPath: jest.fn(),
+vi.mock('../../src/util/config/manage', () => ({
+  getConfigDirectoryPath: vi.fn(),
 }));
 
-jest.mock('fs', () => ({
-  existsSync: jest.fn(),
-  readdirSync: jest.fn(),
-  statSync: jest.fn(),
-  readFileSync: jest.fn(),
-  createWriteStream: jest.fn(),
+vi.mock('fs', () => ({
+  existsSync: vi.fn(),
+  readdirSync: vi.fn(),
+  statSync: vi.fn(),
+  readFileSync: vi.fn(),
+  createWriteStream: vi.fn(),
 }));
 
-jest.mock('zlib', () => ({
-  createGzip: jest.fn(),
-  gzip: jest.fn(),
+vi.mock('zlib', () => ({
+  createGzip: vi.fn(),
+  gzip: vi.fn(),
 }));
 
-jest.mock('../../src/database', () => ({
-  getDbInstance: jest.fn(),
+vi.mock('../../src/database', () => ({
+  getDbInstance: vi.fn(),
 }));
 
 describe('exportCommand', () => {
   let program: Command;
-  let mockExit: jest.SpyInstance;
+  let mockExit: SpyInstance;
   let mockEval: any;
-  const mockFs = fs as jest.Mocked<typeof fs>;
-  const mockGetConfigDirectoryPath = getConfigDirectoryPath as jest.MockedFunction<
+  const mockFs = fs as Mocked<typeof fs>;
+  const mockGetConfigDirectoryPath = getConfigDirectoryPath as MockedFunction<
     typeof getConfigDirectoryPath
   >;
 
   beforeEach(() => {
     program = new Command();
-    mockExit = jest.spyOn(process, 'exit').mockImplementation(() => undefined as never);
+    mockExit = vi.spyOn(process, 'exit').mockImplementation(function() {
+      return undefined as never;
+    });
     mockEval = {
       id: 'test-id',
       createdAt: '2025-07-01T00:00:00.000Z',
       author: 'test-author',
       config: { test: 'config' },
-      toEvaluateSummary: jest.fn().mockResolvedValue({ test: 'summary' }),
+      toEvaluateSummary: vi.fn().mockResolvedValue({ test: 'summary' }),
     };
-    jest.useFakeTimers();
-    jest.setSystemTime(new Date('2025-07-01T00:00:00.000Z'));
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2025-07-01T00:00:00.000Z'));
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
-    jest.useRealTimers();
+    vi.clearAllMocks();
+    vi.useRealTimers();
   });
 
   it('should export latest eval record', async () => {
-    jest.spyOn(Eval, 'latest').mockResolvedValue(mockEval);
+    vi.spyOn(Eval, 'latest').mockResolvedValue(mockEval);
 
     exportCommand(program);
 
@@ -91,7 +109,7 @@ describe('exportCommand', () => {
   });
 
   it('should export eval record by id', async () => {
-    jest.spyOn(Eval, 'findById').mockResolvedValue(mockEval);
+    vi.spyOn(Eval, 'findById').mockResolvedValue(mockEval);
 
     exportCommand(program);
 
@@ -111,7 +129,7 @@ describe('exportCommand', () => {
   });
 
   it('should log JSON data when no output specified', async () => {
-    jest.spyOn(Eval, 'findById').mockResolvedValue(mockEval);
+    vi.spyOn(Eval, 'findById').mockResolvedValue(mockEval);
 
     exportCommand(program);
 
@@ -137,7 +155,7 @@ describe('exportCommand', () => {
   });
 
   it('should exit with error when eval not found', async () => {
-    jest.spyOn(Eval, 'findById').mockResolvedValue(undefined);
+    vi.spyOn(Eval, 'findById').mockResolvedValue(undefined);
 
     exportCommand(program);
 
@@ -147,7 +165,7 @@ describe('exportCommand', () => {
   });
 
   it('should handle export errors', async () => {
-    jest.spyOn(Eval, 'findById').mockRejectedValue(new Error('Export failed'));
+    vi.spyOn(Eval, 'findById').mockRejectedValue(new Error('Export failed'));
 
     exportCommand(program);
 
@@ -163,7 +181,7 @@ describe('exportCommand', () => {
     beforeEach(() => {
       mockGetConfigDirectoryPath.mockReturnValue(mockConfigDir);
       // Reset all mocks for clean state
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it('should handle missing log directory', async () => {

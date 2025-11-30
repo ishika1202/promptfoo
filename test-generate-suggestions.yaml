@@ -1,0 +1,9 @@
+commandLineOptions:
+  generateSuggestions: true
+providers:
+  - id: openai:gpt-4o-mini
+prompts:
+  - Test prompt
+tests:
+  - vars:
+      input: test

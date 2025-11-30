@@ -1,16 +1,16 @@
-import { jest } from '@jest/globals';
+import { Mocked, beforeEach, describe, expect, it, vi } from "vitest";
 
 import RedteamIterativeProvider, {
   runRedteamConversation,
 } from '../../../src/redteam/providers/iterative';
 import type { ApiProvider, AtomicTestCase, ProviderResponse } from '../../../src/types/index';
 
-const mockGetProvider = jest.fn<() => Promise<any>>();
-const mockGetTargetResponse = jest.fn<() => Promise<any>>();
-const mockCheckPenalizedPhrases = jest.fn<() => boolean>();
-const mockGetGraderById = jest.fn();
+const mockGetProvider = vi.fn<() => Promise<any>>();
+const mockGetTargetResponse = vi.fn<() => Promise<any>>();
+const mockCheckPenalizedPhrases = vi.fn<() => boolean>();
+const mockGetGraderById = vi.fn();
 
-jest.mock('../../../src/redteam/providers/shared', () => ({
+vi.mock('../../../src/redteam/providers/shared', () => ({
   redteamProviderManager: {
     getProvider: mockGetProvider,
   },
@@ -18,22 +18,22 @@ jest.mock('../../../src/redteam/providers/shared', () => ({
   checkPenalizedPhrases: mockCheckPenalizedPhrases,
 }));
 
-jest.mock('../../../src/redteam/graders', () => ({
+vi.mock('../../../src/redteam/graders', () => ({
   getGraderById: mockGetGraderById,
 }));
 
 describe('RedteamIterativeProvider', () => {
-  let mockRedteamProvider: jest.Mocked<ApiProvider>;
-  let mockTargetProvider: jest.Mocked<ApiProvider>;
+  let mockRedteamProvider: Mocked<ApiProvider>;
+  let mockTargetProvider: Mocked<ApiProvider>;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     mockRedteamProvider = {
-      id: jest.fn().mockReturnValue('mock-redteam'),
-      callApi: jest
+      id: vi.fn().mockReturnValue('mock-redteam'),
+      callApi: vi
         .fn<(prompt: string, context?: any) => Promise<ProviderResponse>>()
-        .mockImplementation(async (prompt: string) => {
+        .mockImplementation(async function(prompt: string) {
           const input = JSON.parse(prompt);
 
           if (Array.isArray(input) && input[0]?.role === 'system') {
@@ -56,22 +56,27 @@ describe('RedteamIterativeProvider', () => {
             };
           }
         }),
-    } as jest.Mocked<ApiProvider>;
+    } as Mocked<ApiProvider>;
 
     mockTargetProvider = {
-      id: jest.fn().mockReturnValue('mock-target'),
-      callApi: jest.fn<() => Promise<ProviderResponse>>().mockResolvedValue({
+      id: vi.fn().mockReturnValue('mock-target'),
+      callApi: vi.fn<() => Promise<ProviderResponse>>().mockResolvedValue({
         output: 'mock target response',
       }),
-    } as jest.Mocked<ApiProvider>;
+    } as Mocked<ApiProvider>;
 
-    mockGetProvider.mockImplementation(() => Promise.resolve(mockRedteamProvider));
-    mockGetTargetResponse.mockImplementation(async () =>
-      Promise.resolve({
+    mockGetProvider.mockImplementation(function() {
+      return Promise.resolve(mockRedteamProvider);
+    });
+    mockGetTargetResponse.mockImplementation(async function() {
+      return Promise.resolve({
         output: 'mock target response',
-      }),
+      });
+    },
     );
-    mockCheckPenalizedPhrases.mockImplementation(() => false);
+    mockCheckPenalizedPhrases.mockImplementation(function() {
+      return false;
+    });
   });
 
   describe('constructor', () => {
@@ -110,18 +115,22 @@ describe('RedteamIterativeProvider', () => {
   describe('runRedteamConversation', () => {
     it('should complete all iterations when score reaches 10 and grader passes', async () => {
       mockRedteamProvider.callApi
-        .mockImplementationOnce(async () => ({
+        .mockImplementationOnce(async function() {
+        return ({
           output: JSON.stringify({
             improvement: 'test',
             prompt: 'test',
-          }),
-        }))
-        .mockImplementationOnce(async () => ({
+          })
+        });
+      })
+        .mockImplementationOnce(async function() {
+        return ({
           output: JSON.stringify({
             currentResponse: { rating: 10, explanation: 'perfect' },
             previousBestResponse: { rating: 5, explanation: 'good' },
-          }),
-        }));
+          })
+        });
+      });
 
       const result = await runRedteamConversation({
         context: { prompt: { raw: '', label: '' }, vars: {} },
@@ -144,7 +153,7 @@ describe('RedteamIterativeProvider', () => {
 
     it('should exit early when grader fails and use stored grader result', async () => {
       const mockGrader = {
-        getResult: jest.fn<any>().mockResolvedValue({
+        getResult: vi.fn<any>().mockResolvedValue({
           grade: {
             pass: false,
             score: 0,
@@ -158,18 +167,22 @@ describe('RedteamIterativeProvider', () => {
       mockGetGraderById.mockReturnValue(mockGrader);
 
       mockRedteamProvider.callApi
-        .mockImplementationOnce(async () => ({
+        .mockImplementationOnce(async function() {
+        return ({
           output: JSON.stringify({
             improvement: 'test',
             prompt: 'test',
-          }),
-        }))
-        .mockImplementationOnce(async () => ({
+          })
+        });
+      })
+        .mockImplementationOnce(async function() {
+        return ({
           output: JSON.stringify({
             currentResponse: { rating: 5, explanation: 'moderate' },
             previousBestResponse: { rating: 0, explanation: 'none' },
-          }),
-        }));
+          })
+        });
+      });
 
       const test: AtomicTestCase = {
         vars: {},
@@ -224,18 +237,22 @@ describe('RedteamIterativeProvider', () => {
       mockGetGraderById.mockReturnValue(null); // No grader available
 
       mockRedteamProvider.callApi
-        .mockImplementationOnce(async () => ({
+        .mockImplementationOnce(async function() {
+        return ({
           output: JSON.stringify({
             improvement: 'test',
             prompt: 'test',
-          }),
-        }))
-        .mockImplementationOnce(async () => ({
+          })
+        });
+      })
+        .mockImplementationOnce(async function() {
+        return ({
           output: JSON.stringify({
             currentResponse: { rating: 10, explanation: 'Excellent jailbreak achieved' },
             previousBestResponse: { rating: 0, explanation: 'none' },
-          }),
-        }));
+          })
+        });
+      });
 
       const result = await runRedteamConversation({
         context: {
@@ -437,7 +454,7 @@ describe('RedteamIterativeProvider', () => {
 
     it('should include goal in additional rubric when goal is present', async () => {
       const mockGrader = {
-        getResult: jest.fn<any>().mockResolvedValue({
+        getResult: vi.fn<any>().mockResolvedValue({
           grade: {
             pass: true,
             score: 1,
@@ -450,18 +467,22 @@ describe('RedteamIterativeProvider', () => {
       mockGetGraderById.mockReturnValue(mockGrader);
 
       mockRedteamProvider.callApi
-        .mockImplementationOnce(async () => ({
+        .mockImplementationOnce(async function() {
+        return ({
           output: JSON.stringify({
             improvement: 'test',
             prompt: 'test',
-          }),
-        }))
-        .mockImplementationOnce(async () => ({
+          })
+        });
+      })
+        .mockImplementationOnce(async function() {
+        return ({
           output: JSON.stringify({
             currentResponse: { rating: 5, explanation: 'moderate' },
             previousBestResponse: { rating: 0, explanation: 'none' },
-          }),
-        }));
+          })
+        });
+      });
 
       const test: AtomicTestCase = {
         vars: {},
@@ -533,7 +554,7 @@ describe('RedteamIterativeProvider', () => {
       // Capture the FIRST system prompt that gets sent (attacker, not judge)
       let capturedSystemPrompt = '';
       let firstSystemCapture = false;
-      mockRedteamProvider.callApi.mockImplementation(async (prompt: string) => {
+      mockRedteamProvider.callApi.mockImplementation(async function(prompt: string) {
         const input = JSON.parse(prompt);
         if (Array.isArray(input) && input[0]?.role === 'system' && !firstSystemCapture) {
           capturedSystemPrompt = input[0].content;
@@ -585,7 +606,7 @@ describe('RedteamIterativeProvider', () => {
 
     it('should not include additional rubric when no goal is present', async () => {
       const mockGrader = {
-        getResult: jest.fn<any>().mockResolvedValue({
+        getResult: vi.fn<any>().mockResolvedValue({
           grade: {
             pass: true,
             score: 1,
@@ -598,21 +619,27 @@ describe('RedteamIterativeProvider', () => {
       mockGetGraderById.mockReturnValue(mockGrader);
 
       mockRedteamProvider.callApi
-        .mockImplementationOnce(async () => ({
+        .mockImplementationOnce(async function() {
+        return ({
           output: JSON.stringify({
             improvement: 'test',
             prompt: 'test',
-          }),
-        }))
-        .mockImplementationOnce(async () => ({
-          output: JSON.stringify({ onTopic: true }),
-        }))
-        .mockImplementationOnce(async () => ({
+          })
+        });
+      })
+        .mockImplementationOnce(async function() {
+        return ({
+          output: JSON.stringify({ onTopic: true })
+        });
+      })
+        .mockImplementationOnce(async function() {
+        return ({
           output: JSON.stringify({
             currentResponse: { rating: 5, explanation: 'moderate' },
             previousBestResponse: { rating: 0, explanation: 'none' },
-          }),
-        }));
+          })
+        });
+      });
 
       const test: AtomicTestCase = {
         vars: {},
@@ -657,7 +684,7 @@ describe('RedteamIterativeProvider', () => {
 
     it('should prioritize grader failed over judge success when both conditions are met', async () => {
       const mockGrader = {
-        getResult: jest.fn<any>().mockResolvedValue({
+        getResult: vi.fn<any>().mockResolvedValue({
           grade: {
             pass: false, // Grader fails
             score: 0,
@@ -670,18 +697,22 @@ describe('RedteamIterativeProvider', () => {
       mockGetGraderById.mockReturnValue(mockGrader);
 
       mockRedteamProvider.callApi
-        .mockImplementationOnce(async () => ({
+        .mockImplementationOnce(async function() {
+        return ({
           output: JSON.stringify({
             improvement: 'test',
             prompt: 'test',
-          }),
-        }))
-        .mockImplementationOnce(async () => ({
+          })
+        });
+      })
+        .mockImplementationOnce(async function() {
+        return ({
           output: JSON.stringify({
             currentResponse: { rating: 10, explanation: 'Judge also thinks its great' }, // Judge success
             previousBestResponse: { rating: 0, explanation: 'none' },
-          }),
-        }));
+          })
+        });
+      });
 
       const test: AtomicTestCase = {
         vars: {},
@@ -727,7 +758,7 @@ describe('RedteamIterativeProvider', () => {
 
       // Track the prompts sent to the target provider
       const targetPrompts: string[] = [];
-      mockTargetProvider.callApi.mockImplementation(async (prompt: string) => {
+      mockTargetProvider.callApi.mockImplementation(async function(prompt: string) {
         targetPrompts.push(prompt);
         return { output: 'mock target response' };
       });

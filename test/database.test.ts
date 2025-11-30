@@ -1,3 +1,4 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
@@ -10,7 +11,7 @@ describe('database WAL mode', () => {
   let tempDir: string;
 
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     process.env = { ...ORIGINAL_ENV };
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'promptfoo-dbtest-'));
     process.env.PROMPTFOO_CONFIG_DIR = tempDir;

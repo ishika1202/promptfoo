@@ -1,24 +1,28 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { RunEvalOptions } from '../src/types/index';
 
 // Mock dependencies
-jest.mock('cli-progress', () => {
+vi.mock('cli-progress', () => {
   const mockBar = {
-    increment: jest.fn(),
-    update: jest.fn(),
-    getTotal: jest.fn().mockImplementation(function (this: any) {
+    increment: vi.fn(),
+    update: vi.fn(),
+    getTotal: vi.fn().mockImplementation(function (this: any) {
       return this._total || 10;
     }),
   };
 
   return {
     default: {
-      MultiBar: jest.fn().mockImplementation(() => ({
-        create: jest.fn().mockImplementation((total: number) => {
-          const bar = { ...mockBar, _total: total };
-          return bar;
-        }),
-        stop: jest.fn(),
-      })),
+      MultiBar: vi.fn().mockImplementation(function() {
+        return ({
+          create: vi.fn().mockImplementation(function(total: number) {
+            const bar = { ...mockBar, _total: total };
+            return bar;
+          }),
+
+          stop: vi.fn()
+        });
+      }),
       Presets: {
         shades_classic: {},
       },
@@ -26,21 +30,21 @@ jest.mock('cli-progress', () => {
   };
 });
 
-jest.mock('../src/logger', () => ({
+vi.mock('../src/logger', () => ({
   __esModule: true,
   default: {
-    warn: jest.fn(),
-    debug: jest.fn(),
-    info: jest.fn(),
-    error: jest.fn(),
+    warn: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    error: vi.fn(),
   },
   logger: {
-    warn: jest.fn(),
-    debug: jest.fn(),
-    info: jest.fn(),
-    error: jest.fn(),
+    warn: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    error: vi.fn(),
   },
-  setLogLevel: jest.fn(),
+  setLogLevel: vi.fn(),
 }));
 
 // Import after mocking - we need to extract ProgressBarManager from evaluator
@@ -48,7 +52,7 @@ jest.mock('../src/logger', () => ({
 
 describe('Progress Bar Management', () => {
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('ProgressBarManager Work Distribution', () => {

@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as fs from 'fs';
 
 import * as cache from '../../../src/cache';
@@ -6,24 +7,24 @@ import * as util from '../../../src/providers/google/util';
 import { getNunjucksEngineForFilePath } from '../../../src/util/file';
 import * as templates from '../../../src/util/templates';
 
-jest.mock('../../../src/cache', () => ({
-  fetchWithCache: jest.fn(),
+vi.mock('../../../src/cache', () => ({
+  fetchWithCache: vi.fn(),
 }));
 
-jest.mock('../../../src/providers/google/util', () => ({
-  ...jest.requireActual('../../../src/providers/google/util'),
-  maybeCoerceToGeminiFormat: jest.fn(),
+vi.mock('../../../src/providers/google/util', async () => ({
+  ...(await vi.importActual('../../../src/providers/google/util')),
+  maybeCoerceToGeminiFormat: vi.fn()
 }));
 
-jest.mock('../../../src/util/templates', () => ({
-  getNunjucksEngine: jest.fn(() => ({
-    renderString: jest.fn((str) => str),
+vi.mock('../../../src/util/templates', () => ({
+  getNunjucksEngine: vi.fn(() => ({
+    renderString: vi.fn((str) => str),
   })),
 }));
 
-jest.mock('../../../src/util/file', () => ({
-  getNunjucksEngineForFilePath: jest.fn(),
-  maybeLoadFromExternalFile: jest.fn((input) => {
+vi.mock('../../../src/util/file', () => ({
+  getNunjucksEngineForFilePath: vi.fn(),
+  maybeLoadFromExternalFile: vi.fn((input) => {
     if (typeof input === 'string' && input.startsWith('file://')) {
       // Simulate loading from file
       const fs = require('fs');
@@ -43,32 +44,36 @@ jest.mock('../../../src/util/file', () => ({
   }),
 }));
 
-jest.mock('glob', () => ({
-  globSync: jest.fn().mockReturnValue([]),
+vi.mock('glob', () => ({
+  globSync: vi.fn().mockReturnValue([]),
 }));
 
-jest.mock('fs', () => ({
-  existsSync: jest.fn(),
-  readFileSync: jest.fn(),
-  writeFileSync: jest.fn(),
-  statSync: jest.fn(),
+vi.mock('fs', () => ({
+  existsSync: vi.fn(),
+  readFileSync: vi.fn(),
+  writeFileSync: vi.fn(),
+  statSync: vi.fn(),
 }));
 
 describe('AIStudioChatProvider', () => {
   let provider: AIStudioChatProvider;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.mocked(templates.getNunjucksEngine).mockReturnValue({
-      renderString: jest.fn((str) => str),
-    } as any);
-    jest.mocked(fs.existsSync).mockReset();
-    jest.mocked(fs.readFileSync).mockReset();
-    jest.mocked(fs.writeFileSync).mockReset();
-    jest.mocked(fs.statSync).mockReset();
-    jest.mocked(getNunjucksEngineForFilePath).mockReturnValue({
-      renderString: jest.fn((str) => str),
-    } as any);
+    vi.clearAllMocks();
+    vi.mocked(templates.getNunjucksEngine).mockImplementation(function() {
+      return {
+        renderString: vi.fn((str) => str),
+      } as any;
+    });
+    vi.mocked(fs.existsSync).mockReset();
+    vi.mocked(fs.readFileSync).mockReset();
+    vi.mocked(fs.writeFileSync).mockReset();
+    vi.mocked(fs.statSync).mockReset();
+    vi.mocked(getNunjucksEngineForFilePath).mockImplementation(function() {
+      return {
+        renderString: vi.fn((str) => str),
+      } as any;
+    });
 
     provider = new AIStudioChatProvider('gemini-pro', {
       config: {
@@ -82,10 +87,12 @@ describe('AIStudioChatProvider', () => {
 
   describe('constructor and configuration', () => {
     it('should handle API key from different sources and render with Nunjucks', () => {
-      const mockRenderString = jest.fn((str) => (str ? `rendered-${str}` : str));
-      jest.mocked(templates.getNunjucksEngine).mockReturnValue({
-        renderString: mockRenderString,
-      } as any);
+      const mockRenderString = vi.fn((str) => (str ? `rendered-${str}` : str));
+      vi.mocked(templates.getNunjucksEngine).mockImplementation(function() {
+        return {
+          renderString: mockRenderString,
+        } as any;
+      });
 
       // From config
       const providerWithConfigKey = new AIStudioChatProvider('gemini-pro', {
@@ -110,10 +117,12 @@ describe('AIStudioChatProvider', () => {
     });
 
     it('should resolve API URL from various sources and render with Nunjucks', () => {
-      const mockRenderString = jest.fn((str) => `rendered-${str}`);
-      jest.mocked(templates.getNunjucksEngine).mockReturnValue({
-        renderString: mockRenderString,
-      } as any);
+      const mockRenderString = vi.fn((str) => `rendered-${str}`);
+      vi.mocked(templates.getNunjucksEngine).mockImplementation(function() {
+        return {
+          renderString: mockRenderString,
+        } as any;
+      });
 
       // From config.apiHost
       const providerWithConfigHost = new AIStudioChatProvider('gemini-pro', {
@@ -149,9 +158,11 @@ describe('AIStudioChatProvider', () => {
     });
 
     it('should prioritize apiHost over apiBaseUrl', () => {
-      jest.mocked(templates.getNunjucksEngine).mockReturnValue({
-        renderString: jest.fn((str) => `rendered-${str}`),
-      } as any);
+      vi.mocked(templates.getNunjucksEngine).mockImplementation(function() {
+        return {
+          renderString: vi.fn((str) => `rendered-${str}`),
+        } as any;
+      });
       const provider = new AIStudioChatProvider('gemini-pro', {
         config: {
           apiHost: 'host.googleapis.com',
@@ -199,13 +210,15 @@ describe('AIStudioChatProvider', () => {
         },
       });
 
-      jest.mocked(util.maybeCoerceToGeminiFormat).mockReturnValueOnce({
-        contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
-        coerced: false,
-        systemInstruction: undefined,
+      vi.mocked(util.maybeCoerceToGeminiFormat).mockImplementationOnce(function() {
+        return {
+          contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
+          coerced: false,
+          systemInstruction: undefined,
+        };
       });
 
-      jest.mocked(cache.fetchWithCache).mockResolvedValueOnce({
+      vi.mocked(cache.fetchWithCache).mockResolvedValueOnce({
         data: {
           candidates: [],
         },
@@ -227,10 +240,12 @@ describe('AIStudioChatProvider', () => {
         },
       });
 
-      jest.mocked(util.maybeCoerceToGeminiFormat).mockReturnValueOnce({
-        contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
-        coerced: false,
-        systemInstruction: undefined,
+      vi.mocked(util.maybeCoerceToGeminiFormat).mockImplementationOnce(function() {
+        return {
+          contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
+          coerced: false,
+          systemInstruction: undefined,
+        };
       });
 
       const mockResponse = {
@@ -243,7 +258,7 @@ describe('AIStudioChatProvider', () => {
         ],
       };
 
-      jest.mocked(cache.fetchWithCache).mockResolvedValueOnce({
+      vi.mocked(cache.fetchWithCache).mockResolvedValueOnce({
         data: mockResponse,
         cached: false,
         status: 200,
@@ -265,13 +280,15 @@ describe('AIStudioChatProvider', () => {
         },
       });
 
-      jest.mocked(util.maybeCoerceToGeminiFormat).mockReturnValueOnce({
-        contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
-        coerced: false,
-        systemInstruction: undefined,
+      vi.mocked(util.maybeCoerceToGeminiFormat).mockImplementationOnce(function() {
+        return {
+          contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
+          coerced: false,
+          systemInstruction: undefined,
+        };
       });
 
-      jest.mocked(cache.fetchWithCache).mockResolvedValueOnce({
+      vi.mocked(cache.fetchWithCache).mockResolvedValueOnce({
         data: {
           candidates: [],
           promptFeedback: {
@@ -303,13 +320,15 @@ describe('AIStudioChatProvider', () => {
         },
       });
 
-      jest.mocked(util.maybeCoerceToGeminiFormat).mockReturnValueOnce({
-        contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
-        coerced: false,
-        systemInstruction: undefined,
+      vi.mocked(util.maybeCoerceToGeminiFormat).mockImplementationOnce(function() {
+        return {
+          contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
+          coerced: false,
+          systemInstruction: undefined,
+        };
       });
 
-      jest.mocked(cache.fetchWithCache).mockResolvedValueOnce({
+      vi.mocked(cache.fetchWithCache).mockResolvedValueOnce({
         data: {
           candidates: [
             {
@@ -340,17 +359,21 @@ describe('AIStudioChatProvider', () => {
 
   describe('non-Gemini models', () => {
     beforeEach(() => {
-      jest.clearAllMocks();
-      jest.mocked(templates.getNunjucksEngine).mockReturnValue({
-        renderString: jest.fn((str) => str),
-      } as any);
-      jest.mocked(fs.existsSync).mockReset();
-      jest.mocked(fs.readFileSync).mockReset();
-      jest.mocked(fs.writeFileSync).mockReset();
-      jest.mocked(fs.statSync).mockReset();
-      jest.mocked(getNunjucksEngineForFilePath).mockReturnValue({
-        renderString: jest.fn((str) => str),
-      } as any);
+      vi.clearAllMocks();
+      vi.mocked(templates.getNunjucksEngine).mockImplementation(function() {
+        return {
+          renderString: vi.fn((str) => str),
+        } as any;
+      });
+      vi.mocked(fs.existsSync).mockReset();
+      vi.mocked(fs.readFileSync).mockReset();
+      vi.mocked(fs.writeFileSync).mockReset();
+      vi.mocked(fs.statSync).mockReset();
+      vi.mocked(getNunjucksEngineForFilePath).mockImplementation(function() {
+        return {
+          renderString: vi.fn((str) => str),
+        } as any;
+      });
       provider = new AIStudioChatProvider('palm2', {
         config: {
           temperature: 0.7,
@@ -366,7 +389,7 @@ describe('AIStudioChatProvider', () => {
         },
       });
 
-      jest.mocked(cache.fetchWithCache).mockResolvedValueOnce({
+      vi.mocked(cache.fetchWithCache).mockResolvedValueOnce({
         data: {
           error: {
             message: 'Model not found',
@@ -431,11 +454,13 @@ describe('AIStudioChatProvider', () => {
         cached: false,
       };
 
-      jest.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
-      jest.mocked(util.maybeCoerceToGeminiFormat).mockReturnValue({
-        contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
-        coerced: false,
-        systemInstruction: undefined,
+      vi.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
+      vi.mocked(util.maybeCoerceToGeminiFormat).mockImplementation(function() {
+        return {
+          contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
+          coerced: false,
+          systemInstruction: undefined,
+        };
       });
 
       const response = await provider.callGemini('test prompt');
@@ -478,11 +503,13 @@ describe('AIStudioChatProvider', () => {
         cached: true,
       };
 
-      jest.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
-      jest.mocked(util.maybeCoerceToGeminiFormat).mockReturnValue({
-        contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
-        coerced: false,
-        systemInstruction: undefined,
+      vi.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
+      vi.mocked(util.maybeCoerceToGeminiFormat).mockImplementation(function() {
+        return {
+          contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
+          coerced: false,
+          systemInstruction: undefined,
+        };
       });
 
       const response = await provider.callGemini('test prompt');
@@ -511,11 +538,13 @@ describe('AIStudioChatProvider', () => {
         cached: false,
       };
 
-      jest.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
-      jest.mocked(util.maybeCoerceToGeminiFormat).mockReturnValue({
-        contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
-        coerced: false,
-        systemInstruction: undefined,
+      vi.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
+      vi.mocked(util.maybeCoerceToGeminiFormat).mockImplementation(function() {
+        return {
+          contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
+          coerced: false,
+          systemInstruction: undefined,
+        };
       });
 
       await provider.callGemini('test prompt');
@@ -536,13 +565,15 @@ describe('AIStudioChatProvider', () => {
         },
       });
 
-      jest.mocked(util.maybeCoerceToGeminiFormat).mockReturnValueOnce({
-        contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
-        coerced: false,
-        systemInstruction: undefined,
+      vi.mocked(util.maybeCoerceToGeminiFormat).mockImplementationOnce(function() {
+        return {
+          contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
+          coerced: false,
+          systemInstruction: undefined,
+        };
       });
 
-      jest.mocked(cache.fetchWithCache).mockRejectedValueOnce(new Error('API call failed'));
+      vi.mocked(cache.fetchWithCache).mockRejectedValueOnce(new Error('API call failed'));
 
       const response = await provider.callGemini('test prompt');
       expect(response.error).toContain('API call failed');
@@ -568,11 +599,13 @@ describe('AIStudioChatProvider', () => {
         cached: false,
       };
 
-      jest.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
-      jest.mocked(util.maybeCoerceToGeminiFormat).mockReturnValue({
-        contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
-        coerced: false,
-        systemInstruction: undefined,
+      vi.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
+      vi.mocked(util.maybeCoerceToGeminiFormat).mockImplementation(function() {
+        return {
+          contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
+          coerced: false,
+          systemInstruction: undefined,
+        };
       });
 
       const response = await provider.callGemini('test prompt');
@@ -611,11 +644,13 @@ describe('AIStudioChatProvider', () => {
         cached: false,
       };
 
-      jest.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
-      jest.mocked(util.maybeCoerceToGeminiFormat).mockReturnValue({
-        contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
-        coerced: false,
-        systemInstruction: undefined,
+      vi.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
+      vi.mocked(util.maybeCoerceToGeminiFormat).mockImplementation(function() {
+        return {
+          contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
+          coerced: false,
+          systemInstruction: undefined,
+        };
       });
 
       const response = await provider.callGemini('test prompt');
@@ -658,11 +693,13 @@ describe('AIStudioChatProvider', () => {
         cached: false,
       };
 
-      jest.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
-      jest.mocked(util.maybeCoerceToGeminiFormat).mockReturnValue({
-        contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
-        coerced: false,
-        systemInstruction: undefined,
+      vi.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
+      vi.mocked(util.maybeCoerceToGeminiFormat).mockImplementation(function() {
+        return {
+          contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
+          coerced: false,
+          systemInstruction: undefined,
+        };
       });
 
       const response = await provider.callGemini('test prompt');
@@ -693,16 +730,18 @@ describe('AIStudioChatProvider', () => {
         cached: false,
       };
 
-      jest.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
-      jest.mocked(util.maybeCoerceToGeminiFormat).mockReturnValue({
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: 'First part' }, { text: 'Second part' }],
-          },
-        ],
-        coerced: false,
-        systemInstruction: undefined,
+      vi.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
+      vi.mocked(util.maybeCoerceToGeminiFormat).mockImplementation(function() {
+        return {
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: 'First part' }, { text: 'Second part' }],
+            },
+          ],
+          coerced: false,
+          systemInstruction: undefined,
+        };
       });
 
       const response = await provider.callGemini('First part\nSecond part');
@@ -740,11 +779,13 @@ describe('AIStudioChatProvider', () => {
         cached: false,
       };
 
-      jest.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
-      jest.mocked(util.maybeCoerceToGeminiFormat).mockReturnValue({
-        contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
-        coerced: false,
-        systemInstruction: undefined,
+      vi.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
+      vi.mocked(util.maybeCoerceToGeminiFormat).mockImplementation(function() {
+        return {
+          contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
+          coerced: false,
+          systemInstruction: undefined,
+        };
       });
 
       await provider.callGemini('test prompt');
@@ -777,11 +818,13 @@ describe('AIStudioChatProvider', () => {
         cached: false,
       };
 
-      jest.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
-      jest.mocked(util.maybeCoerceToGeminiFormat).mockReturnValue({
-        contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
-        coerced: false,
-        systemInstruction: undefined,
+      vi.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
+      vi.mocked(util.maybeCoerceToGeminiFormat).mockImplementation(function() {
+        return {
+          contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
+          coerced: false,
+          systemInstruction: undefined,
+        };
       });
 
       await v1alphaProvider.callGemini('test prompt');
@@ -807,9 +850,11 @@ describe('AIStudioChatProvider', () => {
     });
 
     it('should handle function calling configuration', async () => {
-      jest.mocked(templates.getNunjucksEngine).mockReturnValue({
-        renderString: jest.fn((str) => `rendered-${str}`),
-      } as any);
+      vi.mocked(templates.getNunjucksEngine).mockImplementation(function() {
+        return {
+          renderString: vi.fn((str) => `rendered-${str}`),
+        } as any;
+      });
       const tools = [
         {
           functionDeclarations: [
@@ -872,13 +917,15 @@ describe('AIStudioChatProvider', () => {
         headers: {},
       };
 
-      jest.mocked(util.maybeCoerceToGeminiFormat).mockReturnValueOnce({
-        contents: [{ role: 'user', parts: [{ text: 'What is the weather in San Francisco?' }] }],
-        coerced: false,
-        systemInstruction: undefined,
+      vi.mocked(util.maybeCoerceToGeminiFormat).mockImplementationOnce(function() {
+        return {
+          contents: [{ role: 'user', parts: [{ text: 'What is the weather in San Francisco?' }] }],
+          coerced: false,
+          systemInstruction: undefined,
+        };
       });
 
-      jest.mocked(cache.fetchWithCache).mockResolvedValueOnce(mockResponse);
+      vi.mocked(cache.fetchWithCache).mockResolvedValueOnce(mockResponse);
 
       const response = await provider.callGemini('What is the weather in San Francisco?');
 
@@ -916,15 +963,17 @@ describe('AIStudioChatProvider', () => {
     });
 
     it('should load tools from external file and render variables', async () => {
-      const mockRenderString = jest.fn((str, _vars) => {
+      const mockRenderString = vi.fn((str, _vars) => {
         if (str.startsWith('file://')) {
           return str;
         }
         return `rendered-${str}`;
       });
-      jest.mocked(templates.getNunjucksEngine).mockReturnValue({
-        renderString: mockRenderString,
-      } as any);
+      vi.mocked(templates.getNunjucksEngine).mockImplementation(function() {
+        return {
+          renderString: mockRenderString,
+        } as any;
+      });
 
       const mockExternalTools = [
         {
@@ -944,8 +993,8 @@ describe('AIStudioChatProvider', () => {
       ];
 
       // Mock file system operations
-      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
-      jest.spyOn(fs, 'readFileSync').mockReturnValue(JSON.stringify(mockExternalTools));
+      vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+      vi.spyOn(fs, 'readFileSync').mockReturnValue(JSON.stringify(mockExternalTools));
 
       provider = new AIStudioChatProvider('gemini-pro', {
         config: {
@@ -975,13 +1024,15 @@ describe('AIStudioChatProvider', () => {
         headers: {},
       };
 
-      jest.mocked(util.maybeCoerceToGeminiFormat).mockReturnValueOnce({
-        contents: [{ role: 'user', parts: [{ text: 'What is the weather in San Francisco?' }] }],
-        coerced: false,
-        systemInstruction: undefined,
+      vi.mocked(util.maybeCoerceToGeminiFormat).mockImplementationOnce(function() {
+        return {
+          contents: [{ role: 'user', parts: [{ text: 'What is the weather in San Francisco?' }] }],
+          coerced: false,
+          systemInstruction: undefined,
+        };
       });
 
-      jest.mocked(cache.fetchWithCache).mockResolvedValueOnce(mockResponse);
+      vi.mocked(cache.fetchWithCache).mockResolvedValueOnce(mockResponse);
 
       const response = await provider.callGemini('What is the weather in San Francisco?', {
         vars: { location: 'San Francisco' },
@@ -1018,9 +1069,11 @@ describe('AIStudioChatProvider', () => {
 
     it('should handle Google Search as a tool', async () => {
       // Reset the Nunjucks mock to return the non-rendered value for these tests
-      jest.mocked(templates.getNunjucksEngine).mockReturnValue({
-        renderString: jest.fn((str) => str),
-      } as any);
+      vi.mocked(templates.getNunjucksEngine).mockImplementation(function() {
+        return {
+          renderString: vi.fn((str) => str),
+        } as any;
+      });
 
       provider = new AIStudioChatProvider('gemini-2.0-flash', {
         config: {
@@ -1069,13 +1122,15 @@ describe('AIStudioChatProvider', () => {
         headers: {},
       };
 
-      jest.mocked(util.maybeCoerceToGeminiFormat).mockReturnValueOnce({
-        contents: [{ role: 'user', parts: [{ text: 'What is the current Google stock price?' }] }],
-        coerced: false,
-        systemInstruction: undefined,
+      vi.mocked(util.maybeCoerceToGeminiFormat).mockImplementationOnce(function() {
+        return {
+          contents: [{ role: 'user', parts: [{ text: 'What is the current Google stock price?' }] }],
+          coerced: false,
+          systemInstruction: undefined,
+        };
       });
 
-      jest.mocked(cache.fetchWithCache).mockResolvedValueOnce(mockResponse);
+      vi.mocked(cache.fetchWithCache).mockResolvedValueOnce(mockResponse);
 
       const response = await provider.callGemini('What is the current Google stock price?');
 
@@ -1109,9 +1164,11 @@ describe('AIStudioChatProvider', () => {
 
     it('should handle Google Search retrieval for Gemini 1.5 models', async () => {
       // Reset the Nunjucks mock to return the non-rendered value for these tests
-      jest.mocked(templates.getNunjucksEngine).mockReturnValue({
-        renderString: jest.fn((str) => str),
-      } as any);
+      vi.mocked(templates.getNunjucksEngine).mockImplementation(function() {
+        return {
+          renderString: vi.fn((str) => str),
+        } as any;
+      });
 
       provider = new AIStudioChatProvider('gemini-1.5-flash', {
         config: {
@@ -1165,13 +1222,15 @@ describe('AIStudioChatProvider', () => {
         headers: {},
       };
 
-      jest.mocked(util.maybeCoerceToGeminiFormat).mockReturnValueOnce({
-        contents: [{ role: 'user', parts: [{ text: 'What is the current Google stock price?' }] }],
-        coerced: false,
-        systemInstruction: undefined,
+      vi.mocked(util.maybeCoerceToGeminiFormat).mockImplementationOnce(function() {
+        return {
+          contents: [{ role: 'user', parts: [{ text: 'What is the current Google stock price?' }] }],
+          coerced: false,
+          systemInstruction: undefined,
+        };
       });
 
-      jest.mocked(cache.fetchWithCache).mockResolvedValueOnce(mockResponse);
+      vi.mocked(cache.fetchWithCache).mockResolvedValueOnce(mockResponse);
 
       const response = await provider.callGemini('What is the current Google stock price?');
 
@@ -1207,9 +1266,11 @@ describe('AIStudioChatProvider', () => {
 
     it('should handle object-based tools format', async () => {
       // Reset the Nunjucks mock to return the non-rendered value for these tests
-      jest.mocked(templates.getNunjucksEngine).mockReturnValue({
-        renderString: jest.fn((str) => str),
-      } as any);
+      vi.mocked(templates.getNunjucksEngine).mockImplementation(function() {
+        return {
+          renderString: vi.fn((str) => str),
+        } as any;
+      });
 
       provider = new AIStudioChatProvider('gemini-2.0-flash', {
         config: {
@@ -1243,13 +1304,15 @@ describe('AIStudioChatProvider', () => {
         headers: {},
       };
 
-      jest.mocked(util.maybeCoerceToGeminiFormat).mockReturnValueOnce({
-        contents: [{ role: 'user', parts: [{ text: 'What is the latest news?' }] }],
-        coerced: false,
-        systemInstruction: undefined,
+      vi.mocked(util.maybeCoerceToGeminiFormat).mockImplementationOnce(function() {
+        return {
+          contents: [{ role: 'user', parts: [{ text: 'What is the latest news?' }] }],
+          coerced: false,
+          systemInstruction: undefined,
+        };
       });
 
-      jest.mocked(cache.fetchWithCache).mockResolvedValueOnce(mockResponse);
+      vi.mocked(cache.fetchWithCache).mockResolvedValueOnce(mockResponse);
 
       const response = await provider.callGemini('What is the latest news?');
 
@@ -1305,11 +1368,13 @@ describe('AIStudioChatProvider', () => {
         cached: false,
       };
 
-      jest.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
-      jest.mocked(util.maybeCoerceToGeminiFormat).mockReturnValue({
-        contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
-        coerced: false,
-        systemInstruction: undefined,
+      vi.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
+      vi.mocked(util.maybeCoerceToGeminiFormat).mockImplementation(function() {
+        return {
+          contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
+          coerced: false,
+          systemInstruction: undefined,
+        };
       });
 
       await provider.callGemini('test prompt');
@@ -1334,8 +1399,8 @@ describe('AIStudioChatProvider', () => {
       const mockSystemInstruction = 'You are a helpful assistant from a file.';
 
       // Mock file system operations
-      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
-      jest.spyOn(fs, 'readFileSync').mockReturnValue(mockSystemInstruction);
+      vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+      vi.spyOn(fs, 'readFileSync').mockReturnValue(mockSystemInstruction);
 
       provider = new AIStudioChatProvider('gemini-pro', {
         config: {
@@ -1356,11 +1421,13 @@ describe('AIStudioChatProvider', () => {
         cached: false,
       };
 
-      jest.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
-      jest.mocked(util.maybeCoerceToGeminiFormat).mockReturnValue({
-        contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
-        coerced: false,
-        systemInstruction: undefined,
+      vi.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
+      vi.mocked(util.maybeCoerceToGeminiFormat).mockImplementation(function() {
+        return {
+          contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
+          coerced: false,
+          systemInstruction: undefined,
+        };
       });
 
       await provider.callGemini('test prompt');
@@ -1410,11 +1477,13 @@ describe('AIStudioChatProvider', () => {
           cached: false,
         };
 
-        jest.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
-        jest.mocked(util.maybeCoerceToGeminiFormat).mockReturnValue({
-          contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
-          coerced: false,
-          systemInstruction: undefined,
+        vi.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
+        vi.mocked(util.maybeCoerceToGeminiFormat).mockImplementation(function() {
+          return {
+            contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
+            coerced: false,
+            systemInstruction: undefined,
+          };
         });
 
         const response = await provider.callGemini('test prompt');
@@ -1452,11 +1521,13 @@ describe('AIStudioChatProvider', () => {
           cached: false,
         };
 
-        jest.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
-        jest.mocked(util.maybeCoerceToGeminiFormat).mockReturnValue({
-          contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
-          coerced: false,
-          systemInstruction: undefined,
+        vi.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
+        vi.mocked(util.maybeCoerceToGeminiFormat).mockImplementation(function() {
+          return {
+            contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
+            coerced: false,
+            systemInstruction: undefined,
+          };
         });
 
         const response = await provider.callGemini('test prompt');
@@ -1495,11 +1566,13 @@ describe('AIStudioChatProvider', () => {
           cached: false,
         };
 
-        jest.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
-        jest.mocked(util.maybeCoerceToGeminiFormat).mockReturnValue({
-          contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
-          coerced: false,
-          systemInstruction: undefined,
+        vi.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
+        vi.mocked(util.maybeCoerceToGeminiFormat).mockImplementation(function() {
+          return {
+            contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
+            coerced: false,
+            systemInstruction: undefined,
+          };
         });
 
         const response = await provider.callGemini('test prompt');
@@ -1542,11 +1615,13 @@ describe('AIStudioChatProvider', () => {
           cached: true,
         };
 
-        jest.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
-        jest.mocked(util.maybeCoerceToGeminiFormat).mockReturnValue({
-          contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
-          coerced: false,
-          systemInstruction: undefined,
+        vi.mocked(cache.fetchWithCache).mockResolvedValue(mockResponse as any);
+        vi.mocked(util.maybeCoerceToGeminiFormat).mockImplementation(function() {
+          return {
+            contents: [{ role: 'user', parts: [{ text: 'test prompt' }] }],
+            coerced: false,
+            systemInstruction: undefined,
+          };
         });
 
         const response = await provider.callGemini('test prompt');

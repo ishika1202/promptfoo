@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
 
 import * as cache from '../../../src/cache';
@@ -917,7 +917,7 @@ describe('OpenAiResponsesProvider', () => {
     });
 
     // Mock fetchWithCache with successful result
-    vi.mocked(cache.fetchWithCache).mockImplementationOnce(async () => {
+    vi.mocked(cache.fetchWithCache).mockImplementationOnce(async function() {
       return {
         data: mockApiResponse,
         cached: false,
@@ -2520,11 +2520,12 @@ describe('OpenAiResponsesProvider', () => {
   describe('deep research model validation', () => {
     beforeAll(() => {
       vi.mocked(cache.fetchWithCache).mockImplementation(
-        () =>
-          ({
+        function() {
+          return ({
             get: vi.fn(),
             set: vi.fn(),
-          }) as any,
+          }) as any;
+        },
       );
     });
 

@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fetchWithCache } from '../../../src/cache';
 import {
   calculateImageCost,
@@ -10,13 +11,13 @@ import {
   validateSizeForModel,
 } from '../../../src/providers/openai/image';
 
-jest.mock('../../../src/cache', () => ({
-  fetchWithCache: jest.fn(),
+vi.mock('../../../src/cache', () => ({
+  fetchWithCache: vi.fn(),
 }));
 
 describe('OpenAI Image Provider Functions', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('validateSizeForModel', () => {
@@ -207,7 +208,7 @@ describe('OpenAI Image Provider Functions', () => {
         statusText: 'OK',
       };
 
-      jest.mocked(fetchWithCache).mockResolvedValue(mockResponse);
+      vi.mocked(fetchWithCache).mockResolvedValue(mockResponse);
 
       const url = 'https://api.openai.com/v1/images/generations';
       const body = { model: 'dall-e-3', prompt: 'test' };
@@ -231,7 +232,7 @@ describe('OpenAI Image Provider Functions', () => {
 
   describe('processApiResponse', () => {
     it('should handle error in data', async () => {
-      const mockDeleteFromCache = jest.fn();
+      const mockDeleteFromCache = vi.fn();
       const data = {
         error: { message: 'Some API error' },
         deleteFromCache: mockDeleteFromCache,
@@ -311,7 +312,7 @@ describe('OpenAI Image Provider Functions', () => {
     });
 
     it('should handle errors during output formatting', async () => {
-      const mockDeleteFromCache = jest.fn();
+      const mockDeleteFromCache = vi.fn();
       const data = {
         data: undefined,
         deleteFromCache: mockDeleteFromCache,
@@ -334,7 +335,7 @@ describe('OpenAI Image Provider Functions', () => {
     });
 
     it('should handle a specific error case with malformed response', async () => {
-      const mockDeleteFromCache = jest.fn();
+      const mockDeleteFromCache = vi.fn();
       const data = {
         data: { data: 'not-an-array' },
         deleteFromCache: mockDeleteFromCache,

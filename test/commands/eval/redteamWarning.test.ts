@@ -1,17 +1,18 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { doEval } from '../../../src/commands/eval';
 import logger from '../../../src/logger';
 
 // Mock util/config/default.ts
-jest.mock('../../../src/util/config/default', () => ({
-  loadDefaultConfig: jest.fn().mockResolvedValue({
+vi.mock('../../../src/util/config/default', () => ({
+  loadDefaultConfig: vi.fn().mockResolvedValue({
     defaultConfig: {},
     defaultConfigPath: null,
   }),
-  clearConfigCache: jest.fn(),
+  clearConfigCache: vi.fn(),
 }));
 
-jest.mock('../../../src/util/config/load', () => ({
-  resolveConfigs: jest.fn().mockResolvedValue({
+vi.mock('../../../src/util/config/load', () => ({
+  resolveConfigs: vi.fn().mockResolvedValue({
     config: {
       redteam: {
         purpose: 'Test red team purpose',
@@ -26,70 +27,74 @@ jest.mock('../../../src/util/config/load', () => ({
   }),
 }));
 
-jest.mock('../../../src/evaluator', () => ({
-  evaluate: jest.fn().mockResolvedValue({}),
+vi.mock('../../../src/evaluator', () => ({
+  evaluate: vi.fn().mockResolvedValue({}),
   DEFAULT_MAX_CONCURRENCY: 4,
 }));
 
 // Mock other dependencies to prevent actual execution
-jest.mock('../../../src/migrate', () => ({
-  runDbMigrations: jest.fn().mockResolvedValue(undefined),
+vi.mock('../../../src/migrate', () => ({
+  runDbMigrations: vi.fn().mockResolvedValue(undefined),
 }));
 
 // Mock the table generation
-jest.mock('../../../src/table', () => ({
-  generateTable: jest.fn().mockReturnValue({
-    toString: jest.fn().mockReturnValue('Mock Table Output'),
+vi.mock('../../../src/table', () => ({
+  generateTable: vi.fn().mockReturnValue({
+    toString: vi.fn().mockReturnValue('Mock Table Output'),
   }),
 }));
 
-jest.mock('../../../src/models/eval', () => {
+vi.mock('../../../src/models/eval', () => {
   return {
     __esModule: true,
-    default: jest.fn().mockImplementation((config) => ({
-      addResult: jest.fn().mockResolvedValue({}),
-      addPrompts: jest.fn().mockResolvedValue({}),
-      clearResults: jest.fn().mockReturnValue(undefined),
-      getTable: jest.fn().mockResolvedValue({
-        head: {
-          prompts: [],
-          vars: [],
-        },
-        body: [],
-      }),
-      resultsCount: 0,
-      prompts: [],
-      persisted: false,
-      results: [],
-      config: config || {},
-    })),
+    default: vi.fn().mockImplementation(function(config) {
+      return ({
+        addResult: vi.fn().mockResolvedValue({}),
+        addPrompts: vi.fn().mockResolvedValue({}),
+        clearResults: vi.fn().mockReturnValue(undefined),
+
+        getTable: vi.fn().mockResolvedValue({
+          head: {
+            prompts: [],
+            vars: [],
+          },
+          body: [],
+        }),
+
+        resultsCount: 0,
+        prompts: [],
+        persisted: false,
+        results: [],
+        config: config || {}
+      });
+    }),
   };
 });
 
 // Mock the logger module with both default and named exports
-jest.mock('../../../src/logger', () => {
+vi.mock('../../../src/logger', () => {
   const mockLogger = {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
   };
 
   return {
     __esModule: true,
     default: mockLogger,
-    getLogLevel: jest.fn().mockReturnValue('info'),
-    setLogLevel: jest.fn(),
+    getLogLevel: vi.fn().mockReturnValue('info'),
+    setLogLevel: vi.fn(),
   };
 });
 
 describe('redteam warning in eval command', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   it('should warn when config has redteam section but no test cases', async () => {

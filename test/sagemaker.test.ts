@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { loadApiProvider } from '../src/providers/index';
 import {
   SageMakerCompletionProvider,
@@ -7,8 +8,8 @@ import {
 import type { LoadApiProviderContext } from '../src/types/index';
 
 // Mock the transform utility
-jest.mock('../src/util/transform', () => ({
-  transform: jest.fn().mockImplementation((transformPath, input) => {
+vi.mock('../src/util/transform', () => ({
+  transform: vi.fn().mockImplementation(function(transformPath, input) {
     if (transformPath === 'file://test-transform.js') {
       return 'transformed via file';
     } else if (transformPath === 'file://empty-transform.js') {
@@ -24,26 +25,28 @@ jest.mock('../src/util/transform', () => ({
 }));
 
 // Mock cache module with more direct approach to avoid initialization issues
-jest.mock('../src/cache', () => {
+vi.mock('../src/cache', () => {
   const cacheMap = new Map();
   const cacheInstance = {
-    get: jest.fn().mockImplementation(async (key) => cacheMap.get(key)),
-    set: jest.fn().mockImplementation(async (key, value) => {
+    get: vi.fn().mockImplementation(async function(key) {
+      return cacheMap.get(key);
+    }),
+    set: vi.fn().mockImplementation(async function(key, value) {
       cacheMap.set(key, value);
       return true;
     }),
   };
 
   return {
-    isCacheEnabled: jest.fn().mockReturnValue(true),
+    isCacheEnabled: vi.fn().mockReturnValue(true),
     // Return the cache instance synchronously to work around the bug in the source code
-    getCache: jest.fn().mockReturnValue(cacheInstance),
+    getCache: vi.fn().mockReturnValue(cacheInstance),
   };
 });
 
 // Mock Function constructor to handle JavaScript expressions
 const originalFunction = global.Function;
-jest.spyOn(global, 'Function').mockImplementation((...args) => {
+vi.spyOn(global, 'Function').mockImplementation(function(...args) {
   // For JavaScript expression evaluation in extractOutput
   if (args.length === 2 && args[0] === 'json') {
     const jsExpression = args[1];
@@ -86,8 +89,8 @@ jest.spyOn(global, 'Function').mockImplementation((...args) => {
 });
 
 // Mock the AWS SDK client
-jest.mock('@aws-sdk/client-sagemaker-runtime', () => {
-  const mockSend = jest.fn().mockImplementation(async (command) => {
+vi.mock('@aws-sdk/client-sagemaker-runtime', () => {
+  const mockSend = vi.fn().mockImplementation(async function(command) {
     if (command.EndpointName === 'fail-endpoint') {
       throw new Error('SageMaker endpoint failed');
     }
@@ -154,22 +157,26 @@ jest.mock('@aws-sdk/client-sagemaker-runtime', () => {
   });
 
   return {
-    SageMakerRuntimeClient: jest.fn().mockImplementation(() => ({
-      send: mockSend,
-    })),
-    InvokeEndpointCommand: jest.fn().mockImplementation((params) => params),
+    SageMakerRuntimeClient: vi.fn().mockImplementation(function() {
+      return ({
+        send: mockSend
+      });
+    }),
+    InvokeEndpointCommand: vi.fn().mockImplementation(function(params) {
+      return params;
+    }),
   };
 });
 
 // Mock the sleep function
-jest.mock('../src/util/time', () => ({
-  ...jest.requireActual('../src/util/time'),
-  sleep: jest.fn().mockResolvedValue(undefined),
+vi.mock('../src/util/time', async () => ({
+  ...(await vi.importActual('../src/util/time')),
+  sleep: vi.fn().mockResolvedValue(undefined)
 }));
 
 describe('SageMakerCompletionProvider', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should initialize with correct endpoint name', () => {
@@ -349,7 +356,7 @@ describe('SageMakerCompletionProvider', () => {
     });
 
     // Mock the applyTransformation method to return a transformed prompt
-    jest.spyOn(provider, 'applyTransformation').mockResolvedValueOnce('Transformed: test prompt');
+    vi.spyOn(provider, 'applyTransformation').mockResolvedValueOnce('Transformed: test prompt');
 
     const result = await provider.callApi('test prompt');
 
@@ -428,7 +435,7 @@ describe('SageMakerCompletionProvider', () => {
     });
 
     // Mock the applyTransformation method to return the original prompt
-    jest.spyOn(provider, 'applyTransformation').mockResolvedValueOnce('test prompt');
+    vi.spyOn(provider, 'applyTransformation').mockResolvedValueOnce('test prompt');
 
     const result = await provider.callApi('test prompt');
 
@@ -512,7 +519,9 @@ describe('SageMakerCompletionProvider', () => {
     };
 
     // Mock the entire callApi method
-    jest.spyOn(provider, 'callApi').mockImplementationOnce(async () => mockResponse);
+    vi.spyOn(provider, 'callApi').mockImplementationOnce(async function() {
+      return mockResponse;
+    });
 
     const result = await provider.callApi('test prompt');
 
@@ -724,7 +733,7 @@ describe('SageMaker Provider Registry', () => {
 
 describe('SageMakerCompletionProvider - Payload Formatting', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('formatPayload method', () => {
@@ -1007,7 +1016,7 @@ describe('SageMakerCompletionProvider - Payload Formatting', () => {
 
 describe('SageMakerCompletionProvider - Response Parsing', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('parseResponse method', () => {
@@ -1096,7 +1105,7 @@ describe('SageMakerCompletionProvider - Response Parsing', () => {
 
 describe('SageMakerCompletionProvider - Parameter Validation', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should handle provider initialization with minimal config', () => {
@@ -1267,7 +1276,7 @@ describe('SageMakerCompletionProvider - Parameter Validation', () => {
 
 describe('SageMakerEmbeddingProvider - Extended Tests', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should format embedding payload for custom model type with multiple input formats', async () => {
@@ -1306,7 +1315,7 @@ describe('SageMakerEmbeddingProvider - Extended Tests', () => {
       },
     };
 
-    jest.spyOn(provider, 'callEmbeddingApi').mockResolvedValueOnce(mockResponse);
+    vi.spyOn(provider, 'callEmbeddingApi').mockResolvedValueOnce(mockResponse);
 
     const result = await provider.callEmbeddingApi('test text');
     expect(result.embedding).toEqual([0.2, 0.4, 0.6, 0.8, 1.0]);
@@ -1339,7 +1348,7 @@ describe('SageMakerEmbeddingProvider - Extended Tests', () => {
     });
 
     // Mock the applyTransformation method to verify it's called
-    const transformSpy = jest
+    const transformSpy = vi
       .spyOn(provider, 'applyTransformation')
       .mockResolvedValueOnce('Embedding: test text');
 

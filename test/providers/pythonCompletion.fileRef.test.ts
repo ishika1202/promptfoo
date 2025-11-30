@@ -67,30 +67,38 @@ describe('PythonProvider with file references', () => {
     pythonUtils.state.validationPromise = null;
 
     vi.mocked(logger.debug).mockImplementation(
-      () =>
-        ({
+      function() {
+        return ({
           debug: vi.fn(),
           info: vi.fn(),
           warn: vi.fn(),
           error: vi.fn(),
-        }) as unknown as Logger,
+        }) as unknown as Logger;
+      },
     );
 
     vi.mocked(logger.error).mockImplementation(
-      () =>
-        ({
+      function() {
+        return ({
           debug: vi.fn(),
           info: vi.fn(),
           warn: vi.fn(),
           error: vi.fn(),
-        }) as unknown as Logger,
+        }) as unknown as Logger;
+      },
     );
 
-    vi.mocked(path.resolve).mockImplementation((...parts) => parts.join('/'));
-    vi.mocked(path.relative).mockReturnValue('relative/path');
-    vi.mocked(path.join).mockImplementation((...parts) => parts.join('/'));
+    vi.mocked(path.resolve).mockImplementation(function(...parts) {
+      return parts.join('/');
+    });
+    vi.mocked(path.relative).mockImplementation(function() {
+      return 'relative/path';
+    });
+    vi.mocked(path.join).mockImplementation(function(...parts) {
+      return parts.join('/');
+    });
 
-    vi.mocked(parsePathOrGlob).mockImplementation((_basePath, runPath) => {
+    vi.mocked(parsePathOrGlob).mockImplementation(function(_basePath, runPath) {
       if (runPath.includes(':')) {
         const [filePath, functionName] = runPath.split(':');
         return {
@@ -109,7 +117,9 @@ describe('PythonProvider with file references', () => {
       };
     });
 
-    vi.mocked(fs.readFileSync).mockReturnValue('mock file content');
+    vi.mocked(fs.readFileSync).mockImplementation(function() {
+      return 'mock file content';
+    });
   });
 
   afterEach(async () => {

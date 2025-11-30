@@ -1,23 +1,26 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import chalk from 'chalk';
 import Table from 'cli-table3';
 import { TERMINAL_MAX_WIDTH } from '../src/constants';
 import { generateTable, wrapTable } from '../src/table';
 import { type EvaluateTable, ResultFailureReason } from '../src/types/index';
 
-jest.mock('cli-table3');
+vi.mock('cli-table3');
 
 describe('table', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // @ts-ignore
-    jest.mocked(Table).mockImplementation(() => ({
-      push: jest.fn(),
-      toString: jest.fn().mockReturnValue('mocked table string'),
-      options: {},
-      width: 0,
-      length: 0,
-      pop: jest.fn(),
-    }));
+    vi.mocked(Table).mockImplementation(function() {
+      return ({
+        push: vi.fn(),
+        toString: vi.fn().mockReturnValue('mocked table string'),
+        options: {},
+        width: 0,
+        length: 0,
+        pop: vi.fn()
+      });
+    });
   });
 
   describe('generateTable', () => {
@@ -97,7 +100,9 @@ describe('table', () => {
 
     it('should handle passing and failing rows correctly', () => {
       const table = new Table({});
-      jest.mocked(Table).mockReturnValue(table);
+      vi.mocked(Table).mockImplementation(function() {
+        return table;
+      });
 
       generateTable(mockEvaluateTable);
 
@@ -116,7 +121,9 @@ describe('table', () => {
 
     it('should respect maxRows parameter', () => {
       const table = new Table({});
-      jest.mocked(Table).mockReturnValue(table);
+      vi.mocked(Table).mockImplementation(function() {
+        return table;
+      });
 
       generateTable(mockEvaluateTable, 250, 1);
 
@@ -180,7 +187,9 @@ describe('table', () => {
       ];
 
       const table = new Table({});
-      jest.mocked(Table).mockReturnValue(table);
+      vi.mocked(Table).mockImplementation(function() {
+        return table;
+      });
 
       wrapTable(rows);
 
@@ -207,7 +216,9 @@ describe('table', () => {
       };
 
       const table = new Table({});
-      jest.mocked(Table).mockReturnValue(table);
+      vi.mocked(Table).mockImplementation(function() {
+        return table;
+      });
 
       wrapTable(rows, columnWidths);
 
@@ -231,7 +242,9 @@ describe('table', () => {
       };
 
       const table = new Table({});
-      jest.mocked(Table).mockReturnValue(table);
+      vi.mocked(Table).mockImplementation(function() {
+        return table;
+      });
 
       wrapTable(rows, columnWidths);
 
@@ -252,8 +265,10 @@ describe('table', () => {
 
       const mockTableString = 'mocked table string output';
       const table = new Table({});
-      table.toString = jest.fn().mockReturnValue(mockTableString);
-      jest.mocked(Table).mockReturnValue(table);
+      table.toString = vi.fn().mockReturnValue(mockTableString);
+      vi.mocked(Table).mockImplementation(function() {
+        return table;
+      });
 
       const result = wrapTable(rows);
 
@@ -268,8 +283,10 @@ describe('table', () => {
       const mockTableString =
         '┌──────┬─────┐\n│ name │ age │\n├──────┼─────┤\n│ John │ 30  │\n└──────┴─────┘';
       const table = new Table({});
-      table.toString = jest.fn().mockReturnValue(mockTableString);
-      jest.mocked(Table).mockReturnValue(table);
+      table.toString = vi.fn().mockReturnValue(mockTableString);
+      vi.mocked(Table).mockImplementation(function() {
+        return table;
+      });
 
       const result = wrapTable(rows);
 

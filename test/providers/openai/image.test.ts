@@ -116,7 +116,7 @@ describe('OpenAiImageProvider', () => {
         const provider = new OpenAiImageProvider('dall-e-3');
 
         // Mock fetchWithCache to prevent it from being called
-        vi.mocked(fetchWithCache).mockImplementation(() => {
+        vi.mocked(fetchWithCache).mockImplementation(function() {
           throw new Error('fetchWithCache should not be called');
         });
 

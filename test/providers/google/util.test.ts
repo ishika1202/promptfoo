@@ -46,13 +46,13 @@ vi.mock('glob', () => ({
 }));
 
 vi.mock('fs', () => ({
-  existsSync: vi.fn().mockImplementation((path) => {
+  existsSync: vi.fn().mockImplementation(function(path) {
     if (path === 'file://system_instruction.json') {
       return true;
     }
     return false;
   }),
-  readFileSync: vi.fn().mockImplementation((path) => {
+  readFileSync: vi.fn().mockImplementation(function(path) {
     if (path === 'file://system_instruction.json') {
       return 'system instruction';
     }

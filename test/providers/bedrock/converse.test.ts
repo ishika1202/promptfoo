@@ -1,11 +1,11 @@
-import { jest } from '@jest/globals';
+import { Mock, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContentBlock, StopReason } from '@aws-sdk/client-bedrock-runtime';
 
 // Define mock module type
 interface MockBedrockModule {
-  BedrockRuntime: jest.Mock;
-  ConverseCommand: jest.Mock;
-  ConverseStreamCommand: jest.Mock;
+  BedrockRuntime: Mock;
+  ConverseCommand: Mock;
+  ConverseStreamCommand: Mock;
 }
 
 // Define a typed version of the ConverseCommandOutput for tests
@@ -32,39 +32,52 @@ interface MockConverseCommandOutput {
 
 // Mock AWS SDK
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockSend = jest.fn<any>();
-jest.mock('@aws-sdk/client-bedrock-runtime', () => ({
-  BedrockRuntime: jest.fn().mockImplementation(() => ({
-    send: mockSend,
-    config: {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      credentials: jest.fn<any>().mockResolvedValue({
-        accessKeyId: 'test-key',
-      }),
-    },
-  })),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ConverseCommand: jest.fn().mockImplementation((input: any) => ({ input })),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ConverseStreamCommand: jest.fn().mockImplementation((input: any) => ({ input })),
-}));
+const mockSend = vi.fn<any>();
+vi.mock('@aws-sdk/client-bedrock-runtime', () => ({
+  BedrockRuntime: vi.fn().mockImplementation(function() {
+    return ({
+      send: mockSend,
 
-jest.mock('@smithy/node-http-handler', () => ({
-  NodeHttpHandler: jest.fn().mockImplementation(() => ({
-    handle: jest.fn(),
-  })),
-}));
-
-jest.mock('proxy-agent', () => jest.fn());
-
-jest.mock('../../../src/cache', () => ({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getCache: jest.fn<any>().mockResolvedValue({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    get: jest.fn<any>().mockResolvedValue(null),
-    set: jest.fn(),
+      config: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        credentials: vi.fn<any>().mockResolvedValue({
+          accessKeyId: 'test-key',
+        }),
+      }
+    });
   }),
-  isCacheEnabled: jest.fn().mockReturnValue(false),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ConverseCommand: vi.fn().mockImplementation(function(input: any) {
+    return ({
+      input
+    });
+  }),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ConverseStreamCommand: vi.fn().mockImplementation(function(input: any) {
+    return ({
+      input
+    });
+  }),
+}));
+
+vi.mock('@smithy/node-http-handler', () => ({
+  NodeHttpHandler: vi.fn().mockImplementation(function() {
+    return ({
+      handle: vi.fn()
+    });
+  }),
+}));
+
+vi.mock('proxy-agent', () => vi.fn());
+
+vi.mock('../../../src/cache', () => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getCache: vi.fn<any>().mockResolvedValue({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    get: vi.fn<any>().mockResolvedValue(null),
+    set: vi.fn(),
+  }),
+  isCacheEnabled: vi.fn().mockReturnValue(false),
 }));
 
 import {
@@ -629,9 +642,7 @@ Third line`;
 
       await provider.callApi('What is the weather?');
 
-      const { ConverseCommand } = jest.requireMock(
-        '@aws-sdk/client-bedrock-runtime',
-      ) as MockBedrockModule;
+      const { ConverseCommand } = await import('@aws-sdk/client-bedrock-runtime') as MockBedrockModule;
       expect(ConverseCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           toolConfig: expect.objectContaining({
@@ -672,9 +683,7 @@ Third line`;
 
       await provider.callApi('Search for cats');
 
-      const { ConverseCommand } = jest.requireMock(
-        '@aws-sdk/client-bedrock-runtime',
-      ) as MockBedrockModule;
+      const { ConverseCommand } = await import('@aws-sdk/client-bedrock-runtime') as MockBedrockModule;
       expect(ConverseCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           toolConfig: expect.objectContaining({
@@ -704,9 +713,7 @@ Third line`;
 
       await provider.callApi('Test');
 
-      const { ConverseCommand } = jest.requireMock(
-        '@aws-sdk/client-bedrock-runtime',
-      ) as MockBedrockModule;
+      const { ConverseCommand } = await import('@aws-sdk/client-bedrock-runtime') as MockBedrockModule;
       expect(ConverseCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           toolConfig: expect.objectContaining({
@@ -733,9 +740,7 @@ Third line`;
 
       await provider.callApi('Test');
 
-      const { ConverseCommand } = jest.requireMock(
-        '@aws-sdk/client-bedrock-runtime',
-      ) as MockBedrockModule;
+      const { ConverseCommand } = await import('@aws-sdk/client-bedrock-runtime') as MockBedrockModule;
       expect(ConverseCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           inferenceConfig: {
@@ -760,9 +765,7 @@ Third line`;
 
       await provider.callApi('Test');
 
-      const { ConverseCommand } = jest.requireMock(
-        '@aws-sdk/client-bedrock-runtime',
-      ) as MockBedrockModule;
+      const { ConverseCommand } = await import('@aws-sdk/client-bedrock-runtime') as MockBedrockModule;
       expect(ConverseCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           inferenceConfig: expect.objectContaining({
@@ -787,9 +790,7 @@ Third line`;
 
       await provider.callApi('Test');
 
-      const { ConverseCommand } = jest.requireMock(
-        '@aws-sdk/client-bedrock-runtime',
-      ) as MockBedrockModule;
+      const { ConverseCommand } = await import('@aws-sdk/client-bedrock-runtime') as MockBedrockModule;
       expect(ConverseCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           inferenceConfig: {
@@ -815,9 +816,7 @@ Third line`;
 
       await provider.callApi('Test');
 
-      const { ConverseCommand } = jest.requireMock(
-        '@aws-sdk/client-bedrock-runtime',
-      ) as MockBedrockModule;
+      const { ConverseCommand } = await import('@aws-sdk/client-bedrock-runtime') as MockBedrockModule;
       expect(ConverseCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           performanceConfig: { latency: 'optimized' },
@@ -837,9 +836,7 @@ Third line`;
 
       await provider.callApi('Test');
 
-      const { ConverseCommand } = jest.requireMock(
-        '@aws-sdk/client-bedrock-runtime',
-      ) as MockBedrockModule;
+      const { ConverseCommand } = await import('@aws-sdk/client-bedrock-runtime') as MockBedrockModule;
       expect(ConverseCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           serviceTier: { type: 'priority' },
@@ -862,9 +859,7 @@ Third line`;
 
       await provider.callApi('Test');
 
-      const { ConverseCommand } = jest.requireMock(
-        '@aws-sdk/client-bedrock-runtime',
-      ) as MockBedrockModule;
+      const { ConverseCommand } = await import('@aws-sdk/client-bedrock-runtime') as MockBedrockModule;
       expect(ConverseCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           guardrailConfig: {
@@ -887,9 +882,7 @@ Third line`;
 
       await provider.callApi('Test');
 
-      const { ConverseCommand } = jest.requireMock(
-        '@aws-sdk/client-bedrock-runtime',
-      ) as MockBedrockModule;
+      const { ConverseCommand } = await import('@aws-sdk/client-bedrock-runtime') as MockBedrockModule;
       expect(ConverseCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           guardrailConfig: {
@@ -917,9 +910,7 @@ Third line`;
 
       await provider.callApi('Test');
 
-      const { ConverseCommand } = jest.requireMock(
-        '@aws-sdk/client-bedrock-runtime',
-      ) as MockBedrockModule;
+      const { ConverseCommand } = await import('@aws-sdk/client-bedrock-runtime') as MockBedrockModule;
       expect(ConverseCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           additionalModelRequestFields: {
@@ -947,9 +938,7 @@ Third line`;
 
       await provider.callApi('Test');
 
-      const { ConverseCommand } = jest.requireMock(
-        '@aws-sdk/client-bedrock-runtime',
-      ) as MockBedrockModule;
+      const { ConverseCommand } = await import('@aws-sdk/client-bedrock-runtime') as MockBedrockModule;
       expect(ConverseCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           additionalModelRequestFields: {
@@ -1326,9 +1315,7 @@ Third line`;
 
       await provider.callApi('Test');
 
-      const { ConverseCommand } = jest.requireMock(
-        '@aws-sdk/client-bedrock-runtime',
-      ) as MockBedrockModule;
+      const { ConverseCommand } = await import('@aws-sdk/client-bedrock-runtime') as MockBedrockModule;
       expect(ConverseCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           toolConfig: expect.objectContaining({
@@ -1361,9 +1348,7 @@ Third line`;
 
       await provider.callApi('Test');
 
-      const { ConverseCommand } = jest.requireMock(
-        '@aws-sdk/client-bedrock-runtime',
-      ) as MockBedrockModule;
+      const { ConverseCommand } = await import('@aws-sdk/client-bedrock-runtime') as MockBedrockModule;
       expect(ConverseCommand).toHaveBeenCalledWith(
         expect.objectContaining({
           toolConfig: expect.objectContaining({

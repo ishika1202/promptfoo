@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AzureModerationProvider } from '../../src/providers/azure/moderation';
 import {
   getDefaultProviders,
@@ -25,8 +25,8 @@ import { DefaultModerationProvider } from '../../src/providers/openai/defaults';
 import type { ApiProvider } from '../../src/types/index';
 import type { EnvOverrides } from '../../src/types/env';
 
-jest.mock('../../src/providers/google/util', () => ({
-  hasGoogleDefaultCredentials: jest.fn().mockResolvedValue(false),
+vi.mock('../../src/providers/google/util', () => ({
+  hasGoogleDefaultCredentials: vi.fn().mockResolvedValue(false),
 }));
 
 class MockProvider implements ApiProvider {
@@ -62,7 +62,7 @@ describe('Provider override tests', () => {
 
   afterEach(() => {
     process.env = originalEnv;
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should override all completion providers when setDefaultCompletionProviders is called', async () => {

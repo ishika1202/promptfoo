@@ -2559,15 +2559,19 @@ describe('AwsBedrockCompletionProvider', () => {
     };
 
     vi.mocked(getCache).mockResolvedValue(mockCache as any);
-    vi.mocked(isCacheEnabled).mockReturnValue(false);
+    vi.mocked(isCacheEnabled).mockImplementation(function() {
+      return false;
+    });
 
     originalModelHandler = AWS_BEDROCK_MODELS['us.anthropic.claude-3-7-sonnet-20250219-v1:0'];
 
     AWS_BEDROCK_MODELS['us.anthropic.claude-3-7-sonnet-20250219-v1:0'] = {
-      params: vi.fn().mockImplementation((config) => ({
-        prompt: 'formatted prompt',
-        ...config,
-      })),
+      params: vi.fn().mockImplementation(function(config) {
+        return ({
+          prompt: 'formatted prompt',
+          ...config
+        });
+      }),
       output: vi.fn().mockReturnValue('processed output'),
       tokenUsage: vi.fn().mockReturnValue({
         prompt: 10,

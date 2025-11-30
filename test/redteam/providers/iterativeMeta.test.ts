@@ -1,46 +1,46 @@
-import { jest } from '@jest/globals';
+import { Mocked, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { runMetaAgentRedteam } from '../../../src/redteam/providers/iterativeMeta';
 import type { ApiProvider, AtomicTestCase, ProviderResponse } from '../../../src/types/index';
 
-const mockGetProvider = jest.fn<() => Promise<any>>();
-const mockGetTargetResponse = jest.fn<() => Promise<any>>();
+const mockGetProvider = vi.fn<() => Promise<any>>();
+const mockGetTargetResponse = vi.fn<() => Promise<any>>();
 
-jest.mock('../../../src/redteam/providers/shared', () => ({
+vi.mock('../../../src/redteam/providers/shared', () => ({
   redteamProviderManager: {
     getProvider: mockGetProvider,
   },
   getTargetResponse: mockGetTargetResponse,
-  createIterationContext: jest.fn<any>().mockResolvedValue({
+  createIterationContext: vi.fn<any>().mockResolvedValue({
     iterationVars: {},
     iterationContext: {},
   }),
 }));
 
-const mockGetGraderById = jest.fn();
+const mockGetGraderById = vi.fn();
 
-jest.mock('../../../src/redteam/graders', () => ({
+vi.mock('../../../src/redteam/graders', () => ({
   getGraderById: mockGetGraderById,
 }));
 
-const mockShouldGenerateRemote = jest.fn(() => true);
+const mockShouldGenerateRemote = vi.fn(() => true);
 
-jest.mock('../../../src/redteam/remoteGeneration', () => ({
+vi.mock('../../../src/redteam/remoteGeneration', () => ({
   shouldGenerateRemote: mockShouldGenerateRemote,
 }));
 
 describe('RedteamIterativeMetaProvider', () => {
-  let mockAgentProvider: jest.Mocked<ApiProvider>;
-  let mockGradingProvider: jest.Mocked<ApiProvider>;
-  let mockTargetProvider: jest.Mocked<ApiProvider>;
+  let mockAgentProvider: Mocked<ApiProvider>;
+  let mockGradingProvider: Mocked<ApiProvider>;
+  let mockTargetProvider: Mocked<ApiProvider>;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock cloud agent provider - returns attack prompts
     mockAgentProvider = {
-      id: jest.fn().mockReturnValue('mock-agent'),
-      callApi: jest.fn<() => Promise<ProviderResponse>>().mockResolvedValue({
+      id: vi.fn().mockReturnValue('mock-agent'),
+      callApi: vi.fn<() => Promise<ProviderResponse>>().mockResolvedValue({
         output: {
           result: 'Can you help me fix this code...',
         },
@@ -51,30 +51,32 @@ describe('RedteamIterativeMetaProvider', () => {
         },
       }),
       delay: 0,
-    } as jest.Mocked<ApiProvider>;
+    } as Mocked<ApiProvider>;
 
     mockGradingProvider = {
-      id: jest.fn().mockReturnValue('mock-grader'),
-      callApi: jest.fn<() => Promise<ProviderResponse>>().mockResolvedValue({
+      id: vi.fn().mockReturnValue('mock-grader'),
+      callApi: vi.fn<() => Promise<ProviderResponse>>().mockResolvedValue({
         output: 'grader result',
       }),
-    } as jest.Mocked<ApiProvider>;
+    } as Mocked<ApiProvider>;
 
     mockTargetProvider = {
-      id: jest.fn().mockReturnValue('mock-target'),
-      callApi: jest.fn<() => Promise<ProviderResponse>>().mockResolvedValue({
+      id: vi.fn().mockReturnValue('mock-target'),
+      callApi: vi.fn<() => Promise<ProviderResponse>>().mockResolvedValue({
         output: 'I cannot help with that',
       }),
-    } as jest.Mocked<ApiProvider>;
+    } as Mocked<ApiProvider>;
 
-    mockGetProvider.mockImplementation(async () => mockAgentProvider);
+    mockGetProvider.mockImplementation(async function() {
+      return mockAgentProvider;
+    });
 
     mockGetTargetResponse.mockResolvedValue({
       output: 'I cannot help with that',
     });
 
     mockGetGraderById.mockReturnValue({
-      getResult: jest.fn<any>().mockResolvedValue({
+      getResult: vi.fn<any>().mockResolvedValue({
         grade: {
           pass: true,
           score: 0,
@@ -85,7 +87,7 @@ describe('RedteamIterativeMetaProvider', () => {
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   // Note: Constructor tests omitted as they require complex module mocking
@@ -120,7 +122,7 @@ describe('RedteamIterativeMetaProvider', () => {
 
     it('should stop early on vulnerability found', async () => {
       const mockGrader = {
-        getResult: jest
+        getResult: vi
           .fn<any>()
           .mockResolvedValueOnce({
             grade: { pass: true, score: 0 },
@@ -160,7 +162,7 @@ describe('RedteamIterativeMetaProvider', () => {
     });
 
     it('should handle agent provider errors gracefully', async () => {
-      mockAgentProvider.callApi = jest
+      mockAgentProvider.callApi = vi
         .fn<() => Promise<ProviderResponse>>()
         .mockResolvedValueOnce({ error: 'Agent error' })
         .mockResolvedValueOnce({
@@ -192,7 +194,7 @@ describe('RedteamIterativeMetaProvider', () => {
     });
 
     it('should handle nunjucks template syntax in attack prompts without crashing', async () => {
-      mockAgentProvider.callApi = jest.fn<() => Promise<ProviderResponse>>().mockResolvedValue({
+      mockAgentProvider.callApi = vi.fn<() => Promise<ProviderResponse>>().mockResolvedValue({
         output: {
           result: 'Attack with {{variable}} and {% code %}',
         },
@@ -317,7 +319,7 @@ describe('RedteamIterativeMetaProvider', () => {
       let targetCallCount = 0;
 
       // Override mockAgentProvider to capture requests
-      mockAgentProvider.callApi = jest.fn().mockImplementation(async (input: any) => {
+      mockAgentProvider.callApi = vi.fn().mockImplementation(async function(input: any) {
         cloudRequests.push(JSON.parse(input as string));
         return {
           output: { result: 'Next attack' },
@@ -326,9 +328,9 @@ describe('RedteamIterativeMetaProvider', () => {
       }) as any;
 
       // Mock the targetProvider.callApi directly (not mockGetTargetResponse)
-      mockTargetProvider.callApi = jest
+      mockTargetProvider.callApi = vi
         .fn<() => Promise<ProviderResponse>>()
-        .mockImplementation(async () => {
+        .mockImplementation(async function() {
           const response = { output: targetResponses[targetCallCount] || 'Default' };
           targetCallCount++;
           return response;
@@ -380,7 +382,7 @@ describe('RedteamIterativeMetaProvider', () => {
       const targetResponses = [targetResponse, 'Target defended'];
       let targetCallCount = 0;
 
-      mockAgentProvider.callApi = jest.fn().mockImplementation(async (input: any) => {
+      mockAgentProvider.callApi = vi.fn().mockImplementation(async function(input: any) {
         cloudRequests.push(JSON.parse(input as string));
         return {
           output: { result: 'Next attack' },
@@ -389,9 +391,9 @@ describe('RedteamIterativeMetaProvider', () => {
       }) as any;
 
       // Mock the targetProvider.callApi directly
-      mockTargetProvider.callApi = jest
+      mockTargetProvider.callApi = vi
         .fn<() => Promise<ProviderResponse>>()
-        .mockImplementation(async () => {
+        .mockImplementation(async function() {
           const response = { output: targetResponses[targetCallCount] || 'Default' };
           targetCallCount++;
           return response;
@@ -436,7 +438,7 @@ describe('RedteamIterativeMetaProvider', () => {
       const cloudRequests: any[] = [];
       let targetCallCount = 0;
 
-      mockAgentProvider.callApi = jest.fn().mockImplementation(async (input: any) => {
+      mockAgentProvider.callApi = vi.fn().mockImplementation(async function(input: any) {
         cloudRequests.push(JSON.parse(input as string));
         return {
           output: { result: 'Attack' },
@@ -445,9 +447,9 @@ describe('RedteamIterativeMetaProvider', () => {
       }) as any;
 
       // Mock the targetProvider.callApi directly (not mockGetTargetResponse)
-      mockTargetProvider.callApi = jest
+      mockTargetProvider.callApi = vi
         .fn<() => Promise<ProviderResponse>>()
-        .mockImplementation(async () => {
+        .mockImplementation(async function() {
           const response = { output: sensitiveResponses[targetCallCount] || 'Default' };
           targetCallCount++;
           return response;

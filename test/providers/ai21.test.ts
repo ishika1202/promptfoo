@@ -44,7 +44,7 @@ describe('AI21ChatCompletionProvider', () => {
   });
 
   it('should warn when constructing with unknown model', () => {
-    const mockWarn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+    const mockWarn = vi.spyOn(logger, 'warn').mockImplementation(function() {});
     new AI21ChatCompletionProvider('unknown-model');
     expect(mockWarn).toHaveBeenCalledWith(expect.stringContaining('unknown-model'));
     mockWarn.mockRestore();

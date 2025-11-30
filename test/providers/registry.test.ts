@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import path from 'path';
 
 import { providerMap } from '../../src/providers/registry';
@@ -5,38 +6,48 @@ import { providerMap } from '../../src/providers/registry';
 import type { LoadApiProviderContext } from '../../src/types/index';
 import type { ProviderOptions } from '../../src/types/providers';
 
-jest.mock('../../src/providers/adaline.gateway', () => ({
-  AdalineGatewayChatProvider: jest.fn().mockImplementation((providerName, modelName) => ({
-    id: () => `adaline:${providerName}:chat:${modelName}`,
-  })),
-  AdalineGatewayEmbeddingProvider: jest.fn().mockImplementation((providerName, modelName) => ({
-    id: () => `adaline:${providerName}:embedding:${modelName}`,
-  })),
+vi.mock('../../src/providers/adaline.gateway', () => ({
+  AdalineGatewayChatProvider: vi.fn().mockImplementation(function(providerName, modelName) {
+    return ({
+      id: () => `adaline:${providerName}:chat:${modelName}`
+    });
+  }),
+  AdalineGatewayEmbeddingProvider: vi.fn().mockImplementation(function(providerName, modelName) {
+    return ({
+      id: () => `adaline:${providerName}:embedding:${modelName}`
+    });
+  }),
 }));
 
-jest.mock('../../src/providers/pythonCompletion', () => {
+vi.mock('../../src/providers/pythonCompletion', () => {
   return {
-    PythonProvider: jest.fn().mockImplementation(() => ({
-      id: () => 'python:script.py:default',
-    })),
+    PythonProvider: vi.fn().mockImplementation(function() {
+      return ({
+        id: () => 'python:script.py:default'
+      });
+    }),
   };
 });
 
-jest.mock('../../src/providers/golangCompletion', () => {
+vi.mock('../../src/providers/golangCompletion', () => {
   return {
-    GolangProvider: jest.fn().mockImplementation(() => ({
-      id: () => 'golang:script.go',
-      callApi: jest.fn(),
-    })),
+    GolangProvider: vi.fn().mockImplementation(function() {
+      return ({
+        id: () => 'golang:script.go',
+        callApi: vi.fn()
+      });
+    }),
   };
 });
 
-jest.mock('../../src/providers/scriptCompletion', () => {
+vi.mock('../../src/providers/scriptCompletion', () => {
   return {
-    ScriptCompletionProvider: jest.fn().mockImplementation(() => ({
-      id: () => 'exec:script.sh',
-      callApi: jest.fn(),
-    })),
+    ScriptCompletionProvider: vi.fn().mockImplementation(function() {
+      return ({
+        id: () => 'exec:script.sh',
+        callApi: vi.fn()
+      });
+    }),
   };
 });
 
@@ -67,7 +78,7 @@ describe('Provider Registry', () => {
     };
 
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it('should handle adaline provider paths correctly', async () => {

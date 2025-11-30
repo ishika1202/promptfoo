@@ -110,8 +110,12 @@ describe('OpenAiTranscriptionProvider', () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
-    vi.mocked(fs.existsSync).mockReturnValue(true);
-    vi.mocked(fs.readFileSync).mockReturnValue(Buffer.from('mock audio data'));
+    vi.mocked(fs.existsSync).mockImplementation(function() {
+      return true;
+    });
+    vi.mocked(fs.readFileSync).mockImplementation(function() {
+      return Buffer.from('mock audio data');
+    });
     vi.mocked(fetchWithCache).mockResolvedValue(mockTranscriptionResponse);
   });
 
@@ -300,7 +304,9 @@ describe('OpenAiTranscriptionProvider', () => {
         config: { apiKey: 'test-key' },
       });
 
-      vi.mocked(fs.existsSync).mockReturnValue(false);
+      vi.mocked(fs.existsSync).mockImplementation(function() {
+        return false;
+      });
 
       const result = await provider.callApi('/path/to/missing.mp3');
 
@@ -383,7 +389,7 @@ describe('OpenAiTranscriptionProvider', () => {
         config: { apiKey: 'test-key' },
       });
 
-      vi.mocked(fetchWithCache).mockImplementation(() => {
+      vi.mocked(fetchWithCache).mockImplementation(function() {
         throw new Error('Unexpected error');
       });
 

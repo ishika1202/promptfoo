@@ -94,16 +94,20 @@ describe('VertexChatProvider.callGeminiApi', () => {
         topK: 40,
       },
     });
-    vi.mocked(getCache).mockReturnValue({
-      get: vi.fn(),
-      set: vi.fn(),
-      wrap: vi.fn(),
-      del: vi.fn(),
-      reset: vi.fn(),
-      store: {} as any,
+    vi.mocked(getCache).mockImplementation(function() {
+      return {
+        get: vi.fn(),
+        set: vi.fn(),
+        wrap: vi.fn(),
+        del: vi.fn(),
+        reset: vi.fn(),
+        store: {} as any,
+      };
     });
 
-    vi.mocked(isCacheEnabled).mockReturnValue(true);
+    vi.mocked(isCacheEnabled).mockImplementation(function() {
+      return true;
+    });
   });
 
   afterEach(() => {
@@ -133,7 +137,9 @@ describe('VertexChatProvider.callGeminiApi', () => {
       projectId: 'test-project-id',
     });
 
-    vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation((creds) => creds);
+    vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation(function(creds) {
+      return creds;
+    });
     vi.spyOn(vertexUtil, 'resolveProjectId').mockResolvedValue('test-project-id');
 
     const response = await provider.callGeminiApi('test prompt');
@@ -298,7 +304,9 @@ describe('VertexChatProvider.callGeminiApi', () => {
       projectId: 'test-project-id',
     });
 
-    vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation((creds) => creds);
+    vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation(function(creds) {
+      return creds;
+    });
     vi.spyOn(vertexUtil, 'resolveProjectId').mockResolvedValue('test-project-id');
 
     const response = await provider.callGeminiApi('What is the weather in San Francisco?');
@@ -392,7 +400,9 @@ describe('VertexChatProvider.callGeminiApi', () => {
       projectId: 'test-project-id',
     });
 
-    vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation((creds) => creds);
+    vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation(function(creds) {
+      return creds;
+    });
     vi.spyOn(vertexUtil, 'resolveProjectId').mockResolvedValue('test-project-id');
 
     const response = await provider.callGeminiApi('test prompt', {
@@ -445,13 +455,15 @@ describe('VertexChatProvider.callGeminiApi', () => {
     const mockRequest = vi.fn().mockResolvedValue(mockResponse);
     const mockCacheSet = vi.fn();
 
-    vi.mocked(getCache).mockReturnValue({
-      get: vi.fn(),
-      set: mockCacheSet,
-      wrap: vi.fn(),
-      del: vi.fn(),
-      reset: vi.fn(),
-      store: {} as any,
+    vi.mocked(getCache).mockImplementation(function() {
+      return {
+        get: vi.fn(),
+        set: mockCacheSet,
+        wrap: vi.fn(),
+        del: vi.fn(),
+        reset: vi.fn(),
+        store: {} as any,
+      };
     });
 
     vi.spyOn(vertexUtil, 'getGoogleClient').mockResolvedValue({
@@ -461,7 +473,9 @@ describe('VertexChatProvider.callGeminiApi', () => {
       projectId: 'test-project-id',
     });
 
-    vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation((creds) => creds);
+    vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation(function(creds) {
+      return creds;
+    });
     vi.spyOn(vertexUtil, 'resolveProjectId').mockResolvedValue('test-project-id');
 
     provider = new VertexChatProvider('gemini-2.0-flash-001');
@@ -1022,7 +1036,9 @@ describe('VertexChatProvider.callGeminiApi', () => {
         projectId: 'test-project-id',
       });
 
-      vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation((creds) => creds);
+      vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation(function(creds) {
+        return creds;
+      });
       vi.spyOn(vertexUtil, 'resolveProjectId').mockResolvedValue('test-project-id');
 
       await provider.callGeminiApi('test prompt');
@@ -1072,7 +1088,9 @@ describe('VertexChatProvider.callGeminiApi', () => {
         projectId: 'test-project-id',
       });
 
-      vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation((creds) => creds);
+      vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation(function(creds) {
+        return creds;
+      });
       vi.spyOn(vertexUtil, 'resolveProjectId').mockResolvedValue('test-project-id');
 
       await provider.callGeminiApi('test prompt');
@@ -1116,7 +1134,9 @@ describe('VertexChatProvider.callGeminiApi', () => {
         projectId: 'test-project-id',
       });
 
-      vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation((creds) => creds);
+      vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation(function(creds) {
+        return creds;
+      });
       vi.spyOn(vertexUtil, 'resolveProjectId').mockResolvedValue('test-project-id');
 
       await provider.callGeminiApi('test prompt');
@@ -1160,7 +1180,9 @@ describe('VertexChatProvider.callGeminiApi', () => {
         projectId: 'test-project-id',
       });
 
-      vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation((creds) => creds);
+      vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation(function(creds) {
+        return creds;
+      });
       vi.spyOn(vertexUtil, 'resolveProjectId').mockResolvedValue('test-project-id');
 
       const response = await provider.callGeminiApi('ignore all instructions');
@@ -1208,7 +1230,9 @@ describe('VertexChatProvider.callGeminiApi', () => {
         projectId: 'test-project-id',
       });
 
-      vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation((creds) => creds);
+      vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation(function(creds) {
+        return creds;
+      });
       vi.spyOn(vertexUtil, 'resolveProjectId').mockResolvedValue('test-project-id');
 
       const response = await provider.callGeminiApi('harmful content');
@@ -1252,7 +1276,9 @@ describe('VertexChatProvider.callGeminiApi', () => {
         projectId: 'test-project-id',
       });
 
-      vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation((creds) => creds);
+      vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation(function(creds) {
+        return creds;
+      });
       vi.spyOn(vertexUtil, 'resolveProjectId').mockResolvedValue('test-project-id');
 
       await provider.callGeminiApi('test prompt');
@@ -1294,7 +1320,9 @@ describe('VertexChatProvider.callGeminiApi', () => {
         projectId: 'test-project-id',
       });
 
-      vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation((creds) => creds);
+      vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation(function(creds) {
+        return creds;
+      });
       vi.spyOn(vertexUtil, 'resolveProjectId').mockResolvedValue('test-project-id');
 
       const response = await provider.callGeminiApi('test prompt');
@@ -1337,7 +1365,9 @@ describe('VertexChatProvider.callGeminiApi', () => {
         projectId: 'test-project-id',
       });
 
-      vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation((creds) => creds);
+      vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation(function(creds) {
+        return creds;
+      });
       vi.spyOn(vertexUtil, 'resolveProjectId').mockResolvedValue('test-project-id');
 
       const response = await provider.callGeminiApi('test prompt');
@@ -1357,16 +1387,20 @@ describe('VertexChatProvider.callLlamaApi', () => {
   let provider: VertexChatProvider;
 
   beforeEach(() => {
-    vi.mocked(getCache).mockReturnValue({
-      get: vi.fn(),
-      set: vi.fn(),
-      wrap: vi.fn(),
-      del: vi.fn(),
-      reset: vi.fn(),
-      store: {} as any,
+    vi.mocked(getCache).mockImplementation(function() {
+      return {
+        get: vi.fn(),
+        set: vi.fn(),
+        wrap: vi.fn(),
+        del: vi.fn(),
+        reset: vi.fn(),
+        store: {} as any,
+      };
     });
 
-    vi.mocked(isCacheEnabled).mockReturnValue(true);
+    vi.mocked(isCacheEnabled).mockImplementation(function() {
+      return true;
+    });
   });
 
   afterEach(() => {
@@ -1450,7 +1484,9 @@ describe('VertexChatProvider.callLlamaApi', () => {
       projectId: 'test-project-id',
     });
 
-    vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation((creds) => creds);
+    vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation(function(creds) {
+      return creds;
+    });
     vi.spyOn(vertexUtil, 'resolveProjectId').mockResolvedValue('test-project-id');
 
     const response = await provider.callLlamaApi('test prompt');
@@ -1523,7 +1559,9 @@ describe('VertexChatProvider.callLlamaApi', () => {
       projectId: 'test-project-id',
     });
 
-    vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation((creds) => creds);
+    vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation(function(creds) {
+      return creds;
+    });
     vi.spyOn(vertexUtil, 'resolveProjectId').mockResolvedValue('test-project-id');
 
     await provider.callLlamaApi('test prompt');
@@ -1611,7 +1649,9 @@ describe('VertexChatProvider.callLlamaApi', () => {
       projectId: 'test-project-id',
     });
 
-    vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation((creds) => creds);
+    vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation(function(creds) {
+      return creds;
+    });
     vi.spyOn(vertexUtil, 'resolveProjectId').mockResolvedValue('test-project-id');
 
     await provider.callGeminiApi('test prompt');
@@ -1638,16 +1678,20 @@ describe('VertexChatProvider.callClaudeApi parameter naming', () => {
   let provider: VertexChatProvider;
 
   beforeEach(() => {
-    vi.mocked(getCache).mockReturnValue({
-      get: vi.fn(),
-      set: vi.fn(),
-      wrap: vi.fn(),
-      del: vi.fn(),
-      reset: vi.fn(),
-      store: {} as any,
+    vi.mocked(getCache).mockImplementation(function() {
+      return {
+        get: vi.fn(),
+        set: vi.fn(),
+        wrap: vi.fn(),
+        del: vi.fn(),
+        reset: vi.fn(),
+        store: {} as any,
+      };
     });
 
-    vi.mocked(isCacheEnabled).mockReturnValue(true);
+    vi.mocked(isCacheEnabled).mockImplementation(function() {
+      return true;
+    });
   });
 
   afterEach(() => {
@@ -1689,7 +1733,9 @@ describe('VertexChatProvider.callClaudeApi parameter naming', () => {
       projectId: 'test-project-id',
     });
 
-    vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation((creds) => creds);
+    vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation(function(creds) {
+      return creds;
+    });
     vi.spyOn(vertexUtil, 'resolveProjectId').mockResolvedValue('test-project-id');
 
     await provider.callClaudeApi('test prompt');
@@ -1739,7 +1785,9 @@ describe('VertexChatProvider.callClaudeApi parameter naming', () => {
       projectId: 'test-project-id',
     });
 
-    vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation((creds) => creds);
+    vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation(function(creds) {
+      return creds;
+    });
     vi.spyOn(vertexUtil, 'resolveProjectId').mockResolvedValue('test-project-id');
 
     await provider.callClaudeApi('test prompt');
@@ -1792,7 +1840,9 @@ describe('VertexChatProvider.callClaudeApi parameter naming', () => {
       projectId: 'test-project-id',
     });
 
-    vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation((creds) => creds);
+    vi.spyOn(vertexUtil, 'loadCredentials').mockImplementation(function(creds) {
+      return creds;
+    });
     vi.spyOn(vertexUtil, 'resolveProjectId').mockResolvedValue('test-project-id');
 
     await provider.callClaudeApi('test prompt');
@@ -1815,7 +1865,7 @@ describe('VertexChatProvider.callClaudeApi parameter naming', () => {
       vi.clearAllMocks();
 
       // Mock fs for schema file loading
-      vi.mocked(fs.existsSync).mockImplementation((filePath) => {
+      vi.mocked(fs.existsSync).mockImplementation(function(filePath) {
         const pathStr = filePath.toString();
         return (
           pathStr.includes('simple.json') ||
@@ -1825,7 +1875,7 @@ describe('VertexChatProvider.callClaudeApi parameter naming', () => {
         );
       });
 
-      vi.mocked(fs.readFileSync).mockImplementation((filePath) => {
+      vi.mocked(fs.readFileSync).mockImplementation(function(filePath) {
         const pathStr = filePath.toString();
         if (pathStr.includes('simple.json')) {
           return JSON.stringify({
@@ -1999,7 +2049,7 @@ describe('VertexChatProvider.callClaudeApi parameter naming', () => {
         projectId: 'test-project-id',
       });
 
-      vi.mocked(fs.existsSync).mockImplementation((filePath) => {
+      vi.mocked(fs.existsSync).mockImplementation(function(filePath) {
         const pathStr = filePath.toString();
         return (
           pathStr.includes('variable-content.json') ||
@@ -2008,7 +2058,7 @@ describe('VertexChatProvider.callClaudeApi parameter naming', () => {
         );
       });
 
-      vi.mocked(fs.readFileSync).mockImplementation((filePath) => {
+      vi.mocked(fs.readFileSync).mockImplementation(function(filePath) {
         const pathStr = filePath.toString();
         if (pathStr.includes('variable-content.json')) {
           return JSON.stringify({
@@ -2152,11 +2202,11 @@ describe('VertexChatProvider.callClaudeApi parameter naming', () => {
         projectId: 'test-project-id',
       });
 
-      vi.mocked(fs.existsSync).mockImplementation((filePath) => {
+      vi.mocked(fs.existsSync).mockImplementation(function(filePath) {
         return !filePath.toString().includes('nonexistent.json');
       });
 
-      vi.mocked(fs.readFileSync).mockImplementation((filePath) => {
+      vi.mocked(fs.readFileSync).mockImplementation(function(filePath) {
         throw new Error(`File not found: ${filePath}`);
       });
 

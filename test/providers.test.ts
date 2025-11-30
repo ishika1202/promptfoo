@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import fs from 'fs';
 import path from 'path';
 
@@ -15,40 +16,46 @@ import { getCloudDatabaseId, getProviderFromCloud, isCloudProvider } from '../sr
 
 import type { ProviderOptions } from '../src/types/index';
 
-jest.mock('fs');
-jest.mock('js-yaml');
-jest.mock('../src/util/fetch/index.ts');
-jest.mock('../src/providers/http');
-jest.mock('../src/providers/openai/chat');
-jest.mock('../src/providers/openai/embedding');
-jest.mock('../src/providers/pythonCompletion');
-jest.mock('../src/providers/scriptCompletion');
-jest.mock('../src/providers/websocket');
-jest.mock('../src/util/cloud');
-jest.mock('../src/util/file', () => {
-  const actual = jest.requireActual('../src/util/file');
+vi.mock('fs');
+vi.mock('js-yaml');
+vi.mock('../src/util/fetch/index.ts');
+vi.mock('../src/providers/http');
+vi.mock('../src/providers/openai/chat');
+vi.mock('../src/providers/openai/embedding');
+vi.mock('../src/providers/pythonCompletion');
+vi.mock('../src/providers/scriptCompletion');
+vi.mock('../src/providers/websocket');
+vi.mock('../src/util/cloud');
+vi.mock('../src/util/file', async () => {
+  const actual = await vi.importActual('../src/util/file');
   return {
     ...actual,
-    maybeLoadConfigFromExternalFile: jest.fn((input) => input),
+    maybeLoadConfigFromExternalFile: vi.fn((input) => input),
   };
 });
 
 describe('loadApiProvider', () => {
-  beforeEach(() => {
-    jest.resetAllMocks();
-    jest.spyOn(process, 'exit').mockImplementation((() => {}) as any);
+  beforeEach(async () => {
+    vi.resetAllMocks();
+    vi.spyOn(process, 'exit').mockImplementation((() => {}) as any);
 
     // Mock the cloud utility functions
-    jest
+    vi
       .mocked(isCloudProvider)
-      .mockImplementation((path: string) => path.startsWith('promptfoo://provider/'));
-    jest
+      .mockImplementation(function(path: string) {
+      return path.startsWith('promptfoo://provider/');
+    });
+    vi
       .mocked(getCloudDatabaseId)
-      .mockImplementation((path: string) => path.slice('promptfoo://provider/'.length));
+      .mockImplementation(function(path: string) {
+      return path.slice('promptfoo://provider/'.length);
+    });
 
     // Reset maybeLoadConfigFromExternalFile mock to default implementation
-    const { maybeLoadConfigFromExternalFile } = jest.requireMock('../src/util/file');
-    maybeLoadConfigFromExternalFile.mockImplementation((input: any) => input);
+    const { maybeLoadConfigFromExternalFile } = await import('../src/util/file');
+    maybeLoadConfigFromExternalFile.mockImplementation(function(input: any) {
+      return input;
+    });
   });
 
   it('should load echo provider', async () => {
@@ -77,8 +84,12 @@ describe('loadApiProvider', () => {
         temperature: 0.7,
       },
     };
-    jest.mocked(fs.readFileSync).mockReturnValue('yaml content');
-    jest.mocked(yaml.load).mockReturnValue(yamlContent);
+    vi.mocked(fs.readFileSync).mockImplementation(function() {
+      return 'yaml content';
+    });
+    vi.mocked(yaml.load).mockImplementation(function() {
+      return yamlContent;
+    });
 
     const provider = await loadApiProvider('file://test.yaml', {
       basePath: '/test',
@@ -97,8 +108,12 @@ describe('loadApiProvider', () => {
         apiKey: 'test-key',
       },
     };
-    jest.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(jsonContent));
-    jest.mocked(yaml.load).mockReturnValue(jsonContent);
+    vi.mocked(fs.readFileSync).mockImplementation(function() {
+      return JSON.stringify(jsonContent);
+    });
+    vi.mocked(yaml.load).mockImplementation(function() {
+      return jsonContent;
+    });
 
     const provider = await loadApiProvider('file://test.json', {
       basePath: '/test',
@@ -129,9 +144,13 @@ describe('loadApiProvider', () => {
       },
     };
 
-    jest.mocked(fs.readFileSync).mockReturnValue('yaml content');
-    jest.mocked(yaml.load).mockReturnValue(yamlContentWithRefs);
-    const { maybeLoadConfigFromExternalFile } = jest.requireMock('../src/util/file');
+    vi.mocked(fs.readFileSync).mockImplementation(function() {
+      return 'yaml content';
+    });
+    vi.mocked(yaml.load).mockImplementation(function() {
+      return yamlContentWithRefs;
+    });
+    const { maybeLoadConfigFromExternalFile } = await import('../src/util/file');
     maybeLoadConfigFromExternalFile.mockReturnValue(resolvedContent);
 
     const _provider = await loadApiProvider('file://provider.yaml', {
@@ -166,9 +185,13 @@ describe('loadApiProvider', () => {
       },
     };
 
-    jest.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(jsonContentWithRefs));
-    jest.mocked(yaml.load).mockReturnValue(jsonContentWithRefs);
-    const { maybeLoadConfigFromExternalFile } = jest.requireMock('../src/util/file');
+    vi.mocked(fs.readFileSync).mockImplementation(function() {
+      return JSON.stringify(jsonContentWithRefs);
+    });
+    vi.mocked(yaml.load).mockImplementation(function() {
+      return jsonContentWithRefs;
+    });
+    const { maybeLoadConfigFromExternalFile } = await import('../src/util/file');
     maybeLoadConfigFromExternalFile.mockReturnValue(resolvedContent);
 
     const _provider = await loadApiProvider('file://provider.json', {
@@ -186,7 +209,7 @@ describe('loadApiProvider', () => {
   });
 
   it('should load Provider from cloud', async () => {
-    jest.mocked(getProviderFromCloud).mockResolvedValue({
+    vi.mocked(getProviderFromCloud).mockResolvedValue({
       id: 'file://path/to/custom_provider.py:call_api',
       config: {
         apiKey: 'test-key',
@@ -209,7 +232,7 @@ describe('loadApiProvider', () => {
   });
 
   it('should merge local config overrides with cloud provider config', async () => {
-    jest.mocked(getProviderFromCloud).mockResolvedValue({
+    vi.mocked(getProviderFromCloud).mockResolvedValue({
       id: 'file://providers/custom_llm.py:generate',
       config: {
         apiKey: 'cloud-api-key',
@@ -243,7 +266,7 @@ describe('loadApiProvider', () => {
   });
 
   it('should override cloud provider label with local label', async () => {
-    jest.mocked(getProviderFromCloud).mockResolvedValue({
+    vi.mocked(getProviderFromCloud).mockResolvedValue({
       id: 'file://models/sentiment.py:analyze',
       label: 'Cloud Label',
       config: {
@@ -262,7 +285,7 @@ describe('loadApiProvider', () => {
   });
 
   it('should override cloud provider transform with local transform', async () => {
-    jest.mocked(getProviderFromCloud).mockResolvedValue({
+    vi.mocked(getProviderFromCloud).mockResolvedValue({
       id: 'file://adapters/wrapper.py:call_model',
       transform: 'response.cloudTransform',
       config: {
@@ -281,7 +304,7 @@ describe('loadApiProvider', () => {
   });
 
   it('should override cloud provider delay with local delay', async () => {
-    jest.mocked(getProviderFromCloud).mockResolvedValue({
+    vi.mocked(getProviderFromCloud).mockResolvedValue({
       id: 'file://rate_limited/api.py:fetch',
       delay: 1000,
       config: {
@@ -300,7 +323,7 @@ describe('loadApiProvider', () => {
   });
 
   it('should merge cloud provider env with local env overrides', async () => {
-    jest.mocked(getProviderFromCloud).mockResolvedValue({
+    vi.mocked(getProviderFromCloud).mockResolvedValue({
       id: 'file://integrations/external_api.py:query',
       config: {
         apiKey: 'test-key',
@@ -336,7 +359,7 @@ describe('loadApiProvider', () => {
   });
 
   it('should merge context env, cloud provider env, and local env overrides', async () => {
-    jest.mocked(getProviderFromCloud).mockResolvedValue({
+    vi.mocked(getProviderFromCloud).mockResolvedValue({
       id: 'file://integrations/external_api.py:query',
       config: {
         apiKey: 'test-key',
@@ -377,7 +400,7 @@ describe('loadApiProvider', () => {
   });
 
   it('should preserve cloud provider config when no local overrides provided', async () => {
-    jest.mocked(getProviderFromCloud).mockResolvedValue({
+    vi.mocked(getProviderFromCloud).mockResolvedValue({
       id: 'file://enterprise/secure_llm.py:invoke',
       label: 'Cloud Label',
       transform: 'response.transform',
@@ -406,7 +429,7 @@ describe('loadApiProvider', () => {
   });
 
   it('should handle cloud provider with empty local config override', async () => {
-    jest.mocked(getProviderFromCloud).mockResolvedValue({
+    vi.mocked(getProviderFromCloud).mockResolvedValue({
       id: 'file://backend/inference.py:predict',
       config: {
         apiKey: 'cloud-key',
@@ -587,21 +610,29 @@ describe('loadApiProvider', () => {
   });
 
   it('should handle invalid file path for yaml/json config', async () => {
-    jest.mocked(fs.readFileSync).mockImplementation(() => {
+    vi.mocked(fs.readFileSync).mockImplementation(function() {
       throw new Error('File not found');
     });
     await expect(loadApiProvider('file://invalid.yaml')).rejects.toThrow('File not found');
   });
 
   it('should handle invalid yaml content', async () => {
-    jest.mocked(fs.readFileSync).mockReturnValue('invalid: yaml: content:');
-    jest.mocked(yaml.load).mockReturnValue(null);
+    vi.mocked(fs.readFileSync).mockImplementation(function() {
+      return 'invalid: yaml: content:';
+    });
+    vi.mocked(yaml.load).mockImplementation(function() {
+      return null;
+    });
     await expect(loadApiProvider('file://invalid.yaml')).rejects.toThrow('Provider config');
   });
 
   it('should handle yaml config without id', async () => {
-    jest.mocked(fs.readFileSync).mockReturnValue('config:\n  key: value');
-    jest.mocked(yaml.load).mockReturnValue({ config: { key: 'value' } });
+    vi.mocked(fs.readFileSync).mockImplementation(function() {
+      return 'config:\n  key: value';
+    });
+    vi.mocked(yaml.load).mockImplementation(function() {
+      return { config: { key: 'value' } };
+    });
     await expect(loadApiProvider('file://invalid.yaml')).rejects.toThrow('must have an id');
   });
 
@@ -613,7 +644,9 @@ describe('loadApiProvider', () => {
       },
       callApi: async (input: string) => ({ output: input }),
     };
-    jest.mocked(PythonProvider).mockImplementation(() => mockProvider as any);
+    vi.mocked(PythonProvider).mockImplementation(function() {
+      return mockProvider as any;
+    });
 
     const provider = await loadApiProvider('python:script.py', {
       basePath: '/custom/path',
@@ -655,8 +688,12 @@ describe('loadApiProvider', () => {
         config: { apiKey: 'test-key2' },
       },
     ];
-    jest.mocked(fs.readFileSync).mockReturnValue('yaml content');
-    jest.mocked(yaml.load).mockReturnValue(yamlContent);
+    vi.mocked(fs.readFileSync).mockImplementation(function() {
+      return 'yaml content';
+    });
+    vi.mocked(yaml.load).mockImplementation(function() {
+      return yamlContent;
+    });
 
     await expect(loadApiProvider('file://test.yaml')).rejects.toThrow(
       'Multiple providers found in test.yaml. Use loadApiProviders instead of loadApiProvider.',
@@ -674,8 +711,12 @@ describe('loadApiProvider', () => {
         OPENAI_API_KEY: 'override-key',
       },
     };
-    jest.mocked(fs.readFileSync).mockReturnValue('yaml content');
-    jest.mocked(yaml.load).mockReturnValue(yamlContent);
+    vi.mocked(fs.readFileSync).mockImplementation(function() {
+      return 'yaml content';
+    });
+    vi.mocked(yaml.load).mockImplementation(function() {
+      return yamlContent;
+    });
 
     const provider = await loadApiProvider('file://test.yaml', {
       basePath: '/test',
@@ -708,8 +749,12 @@ describe('loadApiProvider', () => {
         config: { apiKey: 'test-key2' },
       },
     ];
-    jest.mocked(fs.readFileSync).mockReturnValue('yaml content');
-    jest.mocked(yaml.load).mockReturnValue(yamlContent);
+    vi.mocked(fs.readFileSync).mockImplementation(function() {
+      return 'yaml content';
+    });
+    vi.mocked(yaml.load).mockImplementation(function() {
+      return yamlContent;
+    });
 
     const providers = await loadApiProviders('file://test.yaml');
     expect(providers).toHaveLength(2);
@@ -724,8 +769,12 @@ describe('loadApiProvider', () => {
       id: 'openai:chat:gpt-4',
       config: { apiKey: 'test-key' },
     };
-    jest.mocked(fs.readFileSync).mockReturnValue('yaml content');
-    jest.mocked(yaml.load).mockReturnValue(yamlContent);
+    vi.mocked(fs.readFileSync).mockImplementation(function() {
+      return 'yaml content';
+    });
+    vi.mocked(yaml.load).mockImplementation(function() {
+      return yamlContent;
+    });
 
     const absolutePath = path.resolve('/absolute/path/to/providers.yaml');
     const provider = await loadApiProvider(`file://${absolutePath}`);
@@ -743,8 +792,12 @@ describe('loadApiProvider', () => {
         undefinedValue: undefined,
       },
     };
-    jest.mocked(fs.readFileSync).mockReturnValue('yaml content');
-    jest.mocked(yaml.load).mockReturnValue(yamlContent);
+    vi.mocked(fs.readFileSync).mockImplementation(function() {
+      return 'yaml content';
+    });
+    vi.mocked(yaml.load).mockImplementation(function() {
+      return yamlContent;
+    });
 
     const provider = await loadApiProvider('file://test.yaml');
     expect(provider).toBeDefined();
@@ -782,13 +835,15 @@ describe('loadApiProvider', () => {
 });
 
 describe('loadApiProviders', () => {
-  beforeEach(() => {
-    jest.resetAllMocks();
+  beforeEach(async () => {
+    vi.resetAllMocks();
     cliState.config = undefined;
 
     // Reset maybeLoadConfigFromExternalFile mock to default implementation
-    const { maybeLoadConfigFromExternalFile } = jest.requireMock('../src/util/file');
-    maybeLoadConfigFromExternalFile.mockImplementation((input: any) => input);
+    const { maybeLoadConfigFromExternalFile } = await import('../src/util/file');
+    maybeLoadConfigFromExternalFile.mockImplementation(function(input: any) {
+      return input;
+    });
   });
 
   it('should load single provider from string', async () => {
@@ -887,8 +942,12 @@ describe('loadApiProviders', () => {
       id: 'openai:chat:gpt-4',
       config: { apiKey: 'test-key' },
     };
-    jest.mocked(fs.readFileSync).mockReturnValue('yaml content');
-    jest.mocked(yaml.load).mockReturnValue(yamlContent);
+    vi.mocked(fs.readFileSync).mockImplementation(function() {
+      return 'yaml content';
+    });
+    vi.mocked(yaml.load).mockImplementation(function() {
+      return yamlContent;
+    });
 
     const relativePath = 'relative/path/to/providers.yaml';
     const providers = await loadApiProviders(`file://${relativePath}`, {
@@ -907,8 +966,12 @@ describe('loadApiProviders', () => {
       id: 'openai:chat:gpt-4',
       config: { apiKey: 'test-key' },
     };
-    jest.mocked(fs.readFileSync).mockReturnValue('yaml content');
-    jest.mocked(yaml.load).mockReturnValue(yamlContent);
+    vi.mocked(fs.readFileSync).mockImplementation(function() {
+      return 'yaml content';
+    });
+    vi.mocked(yaml.load).mockImplementation(function() {
+      return yamlContent;
+    });
 
     const absolutePath = path.resolve('/absolute/path/to/providers.yaml');
     const providers = await loadApiProviders(`file://${absolutePath}`);
@@ -930,8 +993,12 @@ describe('loadApiProviders', () => {
         config: { temperature: 0.1 },
       },
     ];
-    jest.mocked(fs.readFileSync).mockReturnValue('yaml content');
-    jest.mocked(yaml.load).mockReturnValue(yamlContent);
+    vi.mocked(fs.readFileSync).mockImplementation(function() {
+      return 'yaml content';
+    });
+    vi.mocked(yaml.load).mockImplementation(function() {
+      return yamlContent;
+    });
 
     // Create provider array with a mix of direct provider and file reference
     const providerArray = [
@@ -976,7 +1043,7 @@ describe('loadApiProviders', () => {
     ];
 
     // Mock the file system read for different paths
-    jest.mocked(fs.readFileSync).mockImplementation((filePath) => {
+    vi.mocked(fs.readFileSync).mockImplementation(function(filePath) {
       if (filePath.toString().includes('first.yaml')) {
         return 'first file content';
       } else if (filePath.toString().includes('second.yaml')) {
@@ -986,7 +1053,7 @@ describe('loadApiProviders', () => {
     });
 
     // Mock yaml loading based on different file contents
-    jest.mocked(yaml.load).mockImplementation((content) => {
+    vi.mocked(yaml.load).mockImplementation(function(content) {
       if (content === 'first file content') {
         return firstFileContent;
       } else if (content === 'second file content') {
@@ -1028,8 +1095,12 @@ describe('loadApiProviders', () => {
         apiKey: '{{ env.TEST_API_KEY }}',
       },
     };
-    jest.mocked(fs.readFileSync).mockReturnValue('yaml content');
-    jest.mocked(yaml.load).mockReturnValue(yamlContent);
+    vi.mocked(fs.readFileSync).mockImplementation(function() {
+      return 'yaml content';
+    });
+    vi.mocked(yaml.load).mockImplementation(function() {
+      return yamlContent;
+    });
 
     const providers = await loadApiProviders('file://test.yaml');
 
