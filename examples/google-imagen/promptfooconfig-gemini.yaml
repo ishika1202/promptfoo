@@ -17,6 +17,16 @@ providers:
       imageAspectRatio: '16:9'
       imageSize: '2K'
 
+defaultTest:
+  assert:
+    # Verify that an image was generated
+    - type: contains
+      value: '![Generated Image](data:image/'
+    # Use a vision-capable model to evaluate the generated image
+    - type: llm-rubric
+      value: The image matches the requested subject "{{subject}}" and reflects the "{{style}}" aesthetic
+      provider: google:gemini-2.5-flash
+
 tests:
   - vars:
       quality: 'photorealistic'
