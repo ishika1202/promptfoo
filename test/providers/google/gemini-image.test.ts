@@ -1,29 +1,30 @@
+import { vi } from 'vitest';
 import { fetchWithCache } from '../../../src/cache';
 import { GeminiImageProvider } from '../../../src/providers/google/gemini-image';
+import * as googleUtil from '../../../src/providers/google/util';
 
-jest.mock('../../../src/cache', () => ({
-  fetchWithCache: jest.fn(),
+vi.mock('../../../src/cache', () => ({
+  fetchWithCache: vi.fn(),
 }));
 
-jest.mock('../../../src/providers/google/util', () => ({
-  getGoogleClient: jest.fn(),
-  loadCredentials: jest.fn(),
-  resolveProjectId: jest.fn(),
-  geminiFormatAndSystemInstructions: jest.fn().mockImplementation((prompt) => ({
+vi.mock('../../../src/providers/google/util', () => ({
+  getGoogleClient: vi.fn(),
+  loadCredentials: vi.fn(),
+  resolveProjectId: vi.fn(),
+  geminiFormatAndSystemInstructions: vi.fn().mockImplementation((prompt) => ({
     contents: [{ parts: [{ text: prompt }], role: 'user' }],
     systemInstruction: undefined,
   })),
 }));
 
 describe('GeminiImageProvider', () => {
-  const mockFetchWithCache = fetchWithCache as jest.Mock;
-  const utilMocks = require('../../../src/providers/google/util');
-  const mockGetGoogleClient = utilMocks.getGoogleClient as jest.Mock;
-  const mockLoadCredentials = utilMocks.loadCredentials as jest.Mock;
-  const mockResolveProjectId = utilMocks.resolveProjectId as jest.Mock;
+  const mockFetchWithCache = vi.mocked(fetchWithCache);
+  const mockGetGoogleClient = vi.mocked(googleUtil.getGoogleClient);
+  const mockLoadCredentials = vi.mocked(googleUtil.loadCredentials);
+  const mockResolveProjectId = vi.mocked(googleUtil.resolveProjectId);
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     process.env.GOOGLE_API_KEY = 'test-api-key';
     delete process.env.GOOGLE_GENERATIVE_AI_API_KEY;
     delete process.env.GEMINI_API_KEY;
@@ -135,7 +136,7 @@ describe('GeminiImageProvider', () => {
       });
 
       const mockClient = {
-        request: jest.fn().mockResolvedValue({
+        request: vi.fn().mockResolvedValue({
           data: {
             candidates: [
               {
