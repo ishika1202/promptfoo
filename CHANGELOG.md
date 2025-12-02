@@ -6,30 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [0.119.15](https://github.com/promptfoo/promptfoo/compare/0.119.14...0.119.15) (2025-12-02)
 
-
 ### Features
 
-* migrate to ESM (ECMAScript Modules) ([#5594](https://github.com/promptfoo/promptfoo/issues/5594)) ([9cdf09b](https://github.com/promptfoo/promptfoo/commit/9cdf09b1c681454ed3fa047dee41a43fea48028a))
-
+- migrate to ESM (ECMAScript Modules) ([#5594](https://github.com/promptfoo/promptfoo/issues/5594)) ([9cdf09b](https://github.com/promptfoo/promptfoo/commit/9cdf09b1c681454ed3fa047dee41a43fea48028a))
 
 ### Bug Fixes
 
-* **deps:** update dependency @apidevtools/json-schema-ref-parser to v15 ([#6336](https://github.com/promptfoo/promptfoo/issues/6336)) ([614aa66](https://github.com/promptfoo/promptfoo/commit/614aa66d224e1333d4a736c0d25ec71a232875e9))
-* **deps:** update dependency @modelcontextprotocol/sdk to v1.23.0 ([#6441](https://github.com/promptfoo/promptfoo/issues/6441)) ([878682f](https://github.com/promptfoo/promptfoo/commit/878682f8a731f4173a82a29828d611e7ebe79b79))
-* **deps:** update dependency chalk to v5 ([#6310](https://github.com/promptfoo/promptfoo/issues/6310)) ([cb2bfb4](https://github.com/promptfoo/promptfoo/commit/cb2bfb463c38ad4cd798b67cd14aef4dcec0a21a))
-* **deps:** update dependency chokidar to v5 ([#6442](https://github.com/promptfoo/promptfoo/issues/6442)) ([6faa86b](https://github.com/promptfoo/promptfoo/commit/6faa86b98f129708d1d90c8cf17e0473fc1936b6))
-* **deps:** update dependency debounce to v3 ([#6445](https://github.com/promptfoo/promptfoo/issues/6445)) ([df4606f](https://github.com/promptfoo/promptfoo/commit/df4606fa260c4017e75848deb16add7b9b17e3de))
-* **deps:** update dependency jsdom to v27 ([#6446](https://github.com/promptfoo/promptfoo/issues/6446)) ([f7b5828](https://github.com/promptfoo/promptfoo/commit/f7b5828a736471dbdfe1e50a4765fabbc4182a6f))
-* **deps:** update dependency ora to v9 ([#6447](https://github.com/promptfoo/promptfoo/issues/6447)) ([e618896](https://github.com/promptfoo/promptfoo/commit/e618896ea7bedb70a0e490e2458426112dc860cc))
-* **deps:** update dependency swiper to v12 ([#6448](https://github.com/promptfoo/promptfoo/issues/6448)) ([2b7569b](https://github.com/promptfoo/promptfoo/commit/2b7569b2b6794e7630e2a427c0d059cc21b056da))
-* **deps:** update dependency uuid to v13 ([#6452](https://github.com/promptfoo/promptfoo/issues/6452)) ([9d6c21f](https://github.com/promptfoo/promptfoo/commit/9d6c21fc412dfe7623e1bf9d2b860a7e85302666))
-* **providers:** improve ChatKit multi-step workflow support ([#6425](https://github.com/promptfoo/promptfoo/issues/6425)) ([ceef623](https://github.com/promptfoo/promptfoo/commit/ceef623af0c48f864f13bd3b29e9c63acd83160c))
-* **redteam:** propagate abort signals through agentic strategy providers ([#6412](https://github.com/promptfoo/promptfoo/issues/6412)) ([49b96e7](https://github.com/promptfoo/promptfoo/commit/49b96e7417eead8b880646b5bec0d6dc7c0641d6))
-
+- **deps:** update dependency @apidevtools/json-schema-ref-parser to v15 ([#6336](https://github.com/promptfoo/promptfoo/issues/6336)) ([614aa66](https://github.com/promptfoo/promptfoo/commit/614aa66d224e1333d4a736c0d25ec71a232875e9))
+- **deps:** update dependency @modelcontextprotocol/sdk to v1.23.0 ([#6441](https://github.com/promptfoo/promptfoo/issues/6441)) ([878682f](https://github.com/promptfoo/promptfoo/commit/878682f8a731f4173a82a29828d611e7ebe79b79))
+- **deps:** update dependency chalk to v5 ([#6310](https://github.com/promptfoo/promptfoo/issues/6310)) ([cb2bfb4](https://github.com/promptfoo/promptfoo/commit/cb2bfb463c38ad4cd798b67cd14aef4dcec0a21a))
+- **deps:** update dependency chokidar to v5 ([#6442](https://github.com/promptfoo/promptfoo/issues/6442)) ([6faa86b](https://github.com/promptfoo/promptfoo/commit/6faa86b98f129708d1d90c8cf17e0473fc1936b6))
+- **deps:** update dependency debounce to v3 ([#6445](https://github.com/promptfoo/promptfoo/issues/6445)) ([df4606f](https://github.com/promptfoo/promptfoo/commit/df4606fa260c4017e75848deb16add7b9b17e3de))
+- **deps:** update dependency jsdom to v27 ([#6446](https://github.com/promptfoo/promptfoo/issues/6446)) ([f7b5828](https://github.com/promptfoo/promptfoo/commit/f7b5828a736471dbdfe1e50a4765fabbc4182a6f))
+- **deps:** update dependency ora to v9 ([#6447](https://github.com/promptfoo/promptfoo/issues/6447)) ([e618896](https://github.com/promptfoo/promptfoo/commit/e618896ea7bedb70a0e490e2458426112dc860cc))
+- **deps:** update dependency swiper to v12 ([#6448](https://github.com/promptfoo/promptfoo/issues/6448)) ([2b7569b](https://github.com/promptfoo/promptfoo/commit/2b7569b2b6794e7630e2a427c0d059cc21b056da))
+- **deps:** update dependency uuid to v13 ([#6452](https://github.com/promptfoo/promptfoo/issues/6452)) ([9d6c21f](https://github.com/promptfoo/promptfoo/commit/9d6c21fc412dfe7623e1bf9d2b860a7e85302666))
+- **providers:** improve ChatKit multi-step workflow support ([#6425](https://github.com/promptfoo/promptfoo/issues/6425)) ([ceef623](https://github.com/promptfoo/promptfoo/commit/ceef623af0c48f864f13bd3b29e9c63acd83160c))
+- **redteam:** propagate abort signals through agentic strategy providers ([#6412](https://github.com/promptfoo/promptfoo/issues/6412)) ([49b96e7](https://github.com/promptfoo/promptfoo/commit/49b96e7417eead8b880646b5bec0d6dc7c0641d6))
 
 ### Reverts
 
-* "fix(deps): update dependency jsdom to v27" ([#6449](https://github.com/promptfoo/promptfoo/issues/6449)) ([1cd29ad](https://github.com/promptfoo/promptfoo/commit/1cd29ad68cf93ab3c7c40a75212ac6f4ca56bcbf))
+- "fix(deps): update dependency jsdom to v27" ([#6449](https://github.com/promptfoo/promptfoo/issues/6449)) ([1cd29ad](https://github.com/promptfoo/promptfoo/commit/1cd29ad68cf93ab3c7c40a75212ac6f4ca56bcbf))
 
 ## [0.119.14](https://github.com/promptfoo/promptfoo/compare/0.119.13...0.119.14) (2025-12-01)
 
